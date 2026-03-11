@@ -1,0 +1,90 @@
+{
+  "name": "yardhouse",
+  "version": "1.0.0",
+  "description": "Yardhouse — Just Nation Operations",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && tsc -p tsconfig.electron.json",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && NODE_ENV=development electron . --dev\"",
+    "electron:build": "npm run build && electron-builder --mac dir",
+    "electron:dmg": "npm run build && electron-builder --mac dmg",
+    "release": "npm run build && electron-builder --mac dmg zip --publish always",
+    "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.justnation.yardhouse",
+    "productName": "Yardhouse",
+    "publish": {
+      "provider": "github",
+      "owner": "justnationllc",
+      "repo": "yardhouse"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "public/icon.icns",
+      "identity": null
+    },
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dashboard_server.py",
+        "to": "server/dashboard_server.py"
+      },
+      {
+        "from": "qbo_integration.py",
+        "to": "server/qbo_integration.py"
+      },
+      {
+        "from": "email_poller.py",
+        "to": "server/email_poller.py"
+      },
+      {
+        "from": ".env",
+        "to": "server/.env"
+      },
+      {
+        "from": "requirements.txt",
+        "to": "server/requirements.txt"
+      },
+      {
+        "from": "briefing-data.json",
+        "to": "server/briefing-data.json"
+      },
+      {
+        "from": "email_poll_state.json",
+        "to": "server/email_poll_state.json"
+      },
+      {
+        "from": ".qbo_tokens.json",
+        "to": "server/.qbo_tokens.json"
+      },
+      {
+        "from": "production-data.json",
+        "to": "server/production-data.json"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.3",
+    "vite": "^6.3.5",
+    "wait-on": "^8.0.3"
+  }
+}

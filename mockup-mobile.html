@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FFFFFF">
+<title>Yardhouse</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  html { height: 100%; background: #FFFFFF; }
+  body { height: 100%; overflow: hidden; background: #FFFFFF; font-family: 'Space Grotesk', sans-serif; position: fixed; width: 100%; }
+  #root { background: #FFFFFF; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+  .scroll-area { background: #E8E8E8; }
+  ::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; -ms-overflow-style: none; }
+  .scroll-area { flex: 1 1 0; overflow-y: scroll; -webkit-overflow-scrolling: touch; min-height: 0; position: relative; overscroll-behavior-y: contain; }
+  @keyframes detailSlideIn {
+    from { opacity: 0; max-height: 0; transform: scaleY(0.8); margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; }
+    to { opacity: 1; max-height: 600px; transform: scaleY(1); }
+  }
+  @keyframes detailSlideOut {
+    from { opacity: 1; max-height: 600px; transform: scaleY(1); }
+    to { opacity: 0; max-height: 0; transform: scaleY(0.8); margin-top: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; }
+  }
+  .detail-card { animation: detailSlideIn 0.25s ease-out forwards; transform-origin: top center; overflow: hidden; }
+  .detail-card-closing { animation: detailSlideOut 0.2s ease-in forwards; transform-origin: top center; overflow: hidden; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+<div id="root"><p style="padding:20px;font-family:monospace;color:#999">Loading...</p></div>
+<script>
+window.onerror = function(msg, url, line, col, err) {
+  document.getElementById("root").innerHTML = '<pre style="color:red;padding:20px;font-size:12px;word-wrap:break-word;white-space:pre-wrap;">ERROR: ' + msg + '\nLine: ' + line + '\nCol: ' + col + '\n' + (err && err.stack ? err.stack : '') + '</pre>';
+};
+</script>
+<script>
+const {
+  useState,
+  useEffect,
+  useRef
+} = React;
+
+// DESIGN TOKENS
+const T = {
+  bg: "#E8E8E8",
+  white: "#FFFFFF",
+  black: "#000000",
+  lavender: "#CFB8FF",
+  cream: "#FFDAC1",
+  orange: "#FF5000",
+  orangeLight: "#FFE0CC",
+  green: "#B8FFD0",
+  red: "#FFB8B8",
+  border: "2px solid #000",
+  borderThin: "1px solid #000",
+  radius: 15,
+  fontHead: "'Space Grotesk', sans-serif",
+  fontMono: "'JetBrains Mono', monospace",
+  fontBody: "'Space Grotesk', sans-serif"
+};
+
+// MODAL SYSTEM — Custom confirmation/action modals matching app design
+var _modalState = { show: false, config: null, resolve: null };
+var _modalListeners = [];
+function _notifyModal() { _modalListeners.forEach(function(fn) { fn(); }); }
+
+function showModal(config) {
+  return new Promise(function(resolve) {
+    _modalState = { show: true, config: config, resolve: resolve };
+    _notifyModal();
+  });
+}
+
+function useModal() {
+  var _s = useState(0);
+  var forceUpdate = _s[1];
+  useEffect(function() {
+    var fn = function() { forceUpdate(function(n) { return n + 1; }); };
+    _modalListeners.push(fn);
+    return function() { _modalListeners = _modalListeners.filter(function(f) { return f !== fn; }); };
+  }, []);
+  return _modalState;
+}
+
+function AppModal() {
+  var modal = useModal();
+  if (!modal.show || !modal.config) return null;
+  var c = modal.config;
+  var dismiss = function(result) {
+    if (modal.resolve) modal.resolve(result);
+    _modalState = { show: false, config: null, resolve: null };
+    _notifyModal();
+  };
+  return React.createElement("div", {
+    onClick: function() { dismiss(false); },
+    style: { position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }
+  }, React.createElement("div", {
+    onClick: function(e) { e.stopPropagation(); },
+    style: { width: "100%", maxWidth: 340, background: T.white, border: T.border, borderRadius: 16, padding: "20px", boxShadow: "0 8px 32px rgba(0,0,0,0.2)" }
+  },
+    c.title && React.createElement("div", {
+      style: { fontFamily: T.fontHead, fontSize: 17, fontWeight: 700, color: T.black, marginBottom: 4 }
+    }, c.title),
+    c.message && React.createElement("div", {
+      style: { fontFamily: T.fontMono, fontSize: 11, fontWeight: 400, color: T.black, opacity: 0.6, lineHeight: 1.5, marginBottom: 16 }
+    }, c.message),
+    c.input && React.createElement("div", { id: "modal-input-wrap", style: { marginBottom: 16 } },
+      React.createElement("label", {
+        style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4, display: "block", marginBottom: 4 }
+      }, c.inputLabel || ""),
+      React.createElement("textarea", {
+        id: "modal-input",
+        defaultValue: c.inputDefault || "",
+        placeholder: c.inputPlaceholder || "",
+        rows: 4,
+        style: { width: "100%", padding: "10px", borderRadius: 8, border: T.border, background: T.bg, color: T.black, fontFamily: T.fontMono, fontSize: 12, fontWeight: 500, outline: "none", boxSizing: "border-box", resize: "vertical" }
+      })
+    ),
+    React.createElement("div", {
+      style: { display: "flex", gap: 8 }
+    },
+      c.confirmLabel && React.createElement("button", {
+        onClick: function() {
+          if (c.input) {
+            var el = document.getElementById("modal-input");
+            dismiss(el ? el.value : true);
+          } else { dismiss(true); }
+        },
+        style: { flex: 1, padding: "11px", borderRadius: 10, border: "none", background: c.confirmColor || T.black, color: c.confirmTextColor || T.white, fontFamily: T.fontMono, fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+      }, c.confirmLabel),
+      React.createElement("button", {
+        onClick: function() { dismiss(false); },
+        style: { flex: 1, padding: "11px", borderRadius: 10, border: T.border, background: T.white, color: T.black, fontFamily: T.fontMono, fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+      }, c.cancelLabel || "CANCEL")
+    )
+  ));
+}
+
+// API CONFIG — Points to Flask backend on same network
+// When running: python3 dashboard_server.py (port 5050)
+var API_BASE = (function() {
+  // On mobile, the Flask server is at the same host as the HTTP server
+  var host = window.location.hostname;
+  return "http://" + host + ":5050";
+})();
+
+// TASK SYNC ENGINE — Bidirectional Microsoft To Do ↔ Yardhouse
+var TaskSync = {
+  _online: false,
+  _lastSync: null,
+  _listeners: [],
+
+  onStatusChange: function(fn) { this._listeners.push(fn); },
+  _notify: function() { this._listeners.forEach(function(fn) { fn(TaskSync._online, TaskSync._lastSync); }); },
+
+  checkConnection: function() {
+    return fetch(API_BASE + "/api/tasks", { method: "GET", signal: AbortSignal.timeout(3000) })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.tasks) {
+          TaskSync._online = true;
+          TaskSync._lastSync = new Date();
+          TaskSync._notify();
+          return { online: true, tasks: data.tasks };
+        }
+        TaskSync._online = false;
+        TaskSync._notify();
+        return { online: false, tasks: null };
+      })
+      .catch(function() {
+        TaskSync._online = false;
+        TaskSync._notify();
+        return { online: false, tasks: null };
+      });
+  },
+
+  fetchTasks: function() {
+    return fetch(API_BASE + "/api/tasks")
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.tasks) {
+          TaskSync._online = true;
+          TaskSync._lastSync = new Date();
+          TaskSync._notify();
+          return data.tasks;
+        }
+        return null;
+      })
+      .catch(function() { return null; });
+  },
+
+  createTask: function(text, tag) {
+    return fetch(API_BASE + "/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text, tag: tag })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { return data.ok ? data.task : null; })
+    .catch(function() { return null; });
+  },
+
+  updateTask: function(taskId, updates) {
+    return fetch(API_BASE + "/api/tasks/" + taskId, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { return data.ok; })
+    .catch(function() { return false; });
+  },
+
+  deleteTask: function(taskId) {
+    return fetch(API_BASE + "/api/tasks/" + taskId, { method: "DELETE" })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { return data.ok; })
+    .catch(function() { return false; });
+  }
+};
+
+// MOCK DATA
+const DELIVERIES = [{
+  id: 1,
+  customer: "3G Warehouse",
+  type: "DEL",
+  driver: "Adalid",
+  trip: 1,
+  status: "Loaded",
+  notes: "520 Grade A",
+  address: "300 Mill Road, Edison, NJ 08817"
+}, {
+  id: 2,
+  customer: "21st Century",
+  type: "DEL",
+  driver: "Tito",
+  trip: 1,
+  status: "Scheduled",
+  notes: "480 Grade A",
+  address: "100 Nixon Ln, Edison, NJ 08817"
+}, {
+  id: 3,
+  customer: "DeftFulfillment",
+  type: "DEL",
+  driver: "Adalid",
+  trip: 2,
+  status: "Pending",
+  notes: "520 9-Block Dock#14",
+  address: "1120 US-22 E, Bridgewater, NJ 08807"
+}, {
+  id: 4,
+  customer: "Sayweee",
+  type: "CPU",
+  driver: "Nick",
+  trip: 1,
+  status: "Scheduled",
+  notes: "Core pickup ~800",
+  address: "174 Delawanna Ave, Clifton, NJ 07014"
+}, {
+  id: 5,
+  customer: "Yankee Clipper",
+  type: "DEL",
+  driver: "Tito",
+  trip: 2,
+  status: "Pending",
+  notes: "520 Grade B",
+  address: "2400 Route 1 N, North Brunswick, NJ 08902"
+}, {
+  id: 6,
+  customer: "Expeditors",
+  type: "DEL",
+  driver: "Nick",
+  trip: 2,
+  status: "Loaded",
+  notes: "520 Grade B",
+  address: "Edison, NJ"
+}, {
+  id: 7,
+  customer: "SalSon",
+  type: "DEL",
+  driver: "Adalid",
+  trip: 3,
+  status: "Pending",
+  notes: "480 Grade B",
+  address: "888 Doremus Ave, Newark, NJ 07114"
+}, {
+  id: 8,
+  customer: "UDS",
+  type: "DEL",
+  driver: "Tito",
+  trip: 3,
+  status: "Pending",
+  notes: "520 Blue HD Block",
+  address: "260 Meadow Road, Edison, NJ 08817"
+}, {
+  id: 9,
+  customer: "Bettaway Fair.",
+  type: "CPU",
+  driver: "Nick",
+  trip: 3,
+  status: "Scheduled",
+  notes: "Core repairable",
+  address: "Fairfield, NJ"
+}, {
+  id: 10,
+  customer: "Americold",
+  type: "DEL",
+  driver: "Adalid",
+  trip: 4,
+  status: "Pending",
+  notes: "PO #4421",
+  address: "Edison, NJ"
+}, {
+  id: 11,
+  customer: "BC USA",
+  type: "DEL",
+  driver: "Tito",
+  trip: 4,
+  status: "Pending",
+  notes: "NEW 48x40, BOL req",
+  address: "South Plainfield, NJ"
+}, {
+  id: 12,
+  customer: "Dr. Praeger's",
+  type: "CPU",
+  driver: "Nick",
+  trip: 4,
+  status: "Scheduled",
+  notes: "Damage pickup",
+  address: "5 Boumar Place, Elmwood Park, NJ 07407"
+}, {
+  id: 13,
+  customer: "Peerless Bev.",
+  type: "CPU",
+  driver: "Adalid",
+  trip: 5,
+  status: "Pending",
+  notes: "Recycling trailer",
+  address: "1000 Floral Ave, Union, NJ 07083"
+}];
+const TODAYS_EMAILS = [{
+  id: 1,
+  from: "Juan Ocampo",
+  email: "juan@3gwarehouse.com",
+  company: "3G Warehouse",
+  subject: "Need 2 stacks Grade A tomorrow AM",
+  summary: "Juan is requesting 2 stacks of 48x40 Grade A pallets delivered tomorrow morning. He needs them at the Edison dock by 7 AM for an outbound shipment.",
+  time: "9:14 AM",
+  unread: true
+}, {
+  id: 2,
+  from: "Patrick Tierney",
+  email: "ptierney@21stcentury.com",
+  company: "21st Century",
+  subject: "RE: Invoice #4521 — payment sent",
+  summary: "Patrick confirms payment was sent for invoice #4521 ($1,800). Check arrived via mail on Friday, should clear by Wednesday.",
+  time: "8:47 AM",
+  unread: true
+}, {
+  id: 3,
+  from: "Steven Yu",
+  email: "syu@sayweee.com",
+  company: "Sayweee",
+  subject: "Core pickup schedule this week?",
+  summary: "Steven is asking about this week's core pickup schedule. They have about 4 trailer loads of cores ready and want to coordinate pickup days.",
+  time: "8:22 AM",
+  unread: false
+}, {
+  id: 4,
+  from: "Jenny",
+  email: "jenny@deftfulfillment.com",
+  company: "DeftFulfillment",
+  subject: "PO #1189 — 9-blocks confirmed",
+  summary: "Jenny confirmed PO #1189 for 48x40 9-block pallets. Quantity: 500 units. Delivery requested for next Tuesday at the Bridgewater facility.",
+  time: "7:55 AM",
+  unread: false
+}, {
+  id: 5,
+  from: "David Testa",
+  email: "dtesta@yankeeclipper.com",
+  company: "Yankee Clipper",
+  subject: "Can you do a drop trailer Friday?",
+  summary: "David is asking if we can drop a trailer at N. Brunswick on Friday for them to load over the weekend. They'll have about 800 Grade B pallets ready.",
+  time: "7:30 AM",
+  unread: true
+}];
+var INIT_TASKS = [{
+  id: 1, text: "Follow up Ongweoweh — RFQ deadline passed", tag: "URG", done: false
+}, {
+  id: 2, text: "Send Sayweee core pickup schedule", tag: "NEUTRAL", done: false
+}, {
+  id: 3, text: "Call Ken Mancuso @ PepsiCo", tag: "NEUTRAL", done: false
+}, {
+  id: 4, text: "Invoice 3G Warehouse — 2 stacks Grade A", tag: "PASSIVE", done: false
+}, {
+  id: 5, text: "Schedule Yankee Clipper drop trailer Friday", tag: "NEUTRAL", done: false
+}, {
+  id: 6, text: "Confirm DeftFulfillment PO #1189 delivery", tag: "NEUTRAL", done: true
+}, {
+  id: 7, text: "Reply to Patrick Tierney — payment received", tag: "NEUTRAL", done: true
+}];
+var SCHEDULE_EVENTS = (function() {
+  var today = new Date();
+  var days = [];
+  for (var d = 0; d < 7; d++) {
+    var dt = new Date(today);
+    dt.setDate(today.getDate() + d);
+    days.push(dt.toISOString().split("T")[0]);
+  }
+  return [{
+    date: days[0], title: "Driver meeting — AM routes", time: "7:00 AM", duration: "30m", type: "internal", location: "Yard office"
+  }, {
+    date: days[0], title: "Call w/ Steven Yu — Sayweee cores", time: "10:00 AM", duration: "15m", type: "client", location: ""
+  }, {
+    date: days[0], title: "3G Warehouse delivery follow-up", time: "2:00 PM", duration: "15m", type: "client", location: ""
+  }, {
+    date: days[1], title: "Yard inventory count", time: "8:00 AM", duration: "1h", type: "internal", location: "271 Meadow Rd"
+  }, {
+    date: days[1], title: "DeftFulfillment — PO review", time: "11:00 AM", duration: "30m", type: "client", location: ""
+  }, {
+    date: days[1], title: "QuickBooks reconciliation", time: "3:00 PM", duration: "1h", type: "internal", location: ""
+  }, {
+    date: days[2], title: "Yankee Clipper — drop trailer coordination", time: "9:00 AM", duration: "30m", type: "client", location: ""
+  }, {
+    date: days[2], title: "Sales pipeline review", time: "1:00 PM", duration: "45m", type: "internal", location: "Yard office"
+  }, {
+    date: days[3], title: "Americold — site visit Edison", time: "10:00 AM", duration: "1h", type: "client", location: "Americold, Edison NJ"
+  }, {
+    date: days[3], title: "SalSon — pricing negotiation", time: "2:30 PM", duration: "30m", type: "client", location: ""
+  }, {
+    date: days[4], title: "Weekly team standup", time: "8:30 AM", duration: "30m", type: "internal", location: "Yard office"
+  }, {
+    date: days[4], title: "Expeditors — Grade B delivery", time: "11:00 AM", duration: "15m", type: "client", location: ""
+  }, {
+    date: days[4], title: "Ken Mancuso @ PepsiCo — intro call", time: "3:00 PM", duration: "30m", type: "client", location: ""
+  }, {
+    date: days[5], title: "Bettaway — core pickup review", time: "9:00 AM", duration: "30m", type: "client", location: ""
+  }, {
+    date: days[6], title: "Week ahead planning", time: "4:00 PM", duration: "30m", type: "internal", location: "Yard office"
+  }];
+})();
+const CUSTOMERS = [{
+  name: "3G Warehouse",
+  contacts: [{ name: "Juan Ocampo", role: "Warehouse Mgr", phone: "(732) 555-0101", email: "juan@3gwarehouse.com" }],
+  city: "Edison, NJ",
+  balance: 4250.00,
+  products: [{ name: "48x40 Grade A", price: "$6.00" }, { name: "48x40 Grade B", price: "$4.50" }]
+}, {
+  name: "21st Century",
+  contacts: [{ name: "Patrick Tierney", role: "Operations", phone: "(732) 555-0202", email: "ptierney@21stcentury.com" }],
+  city: "Edison, NJ",
+  balance: 1800.00,
+  products: [{ name: "48x40 Grade A", price: "$6.00" }, { name: "48x40 Grade B", price: "$4.50" }]
+}, {
+  name: "DeftFulfillment",
+  contacts: [{ name: "Jenny", role: "Purchasing", phone: "(908) 555-0303", email: "jenny@deftfulfillment.com" }, { name: "Mike R.", role: "Receiving", phone: "(908) 555-0304", email: "mike@deftfulfillment.com" }],
+  city: "Bridgewater, NJ",
+  balance: 0,
+  products: [{ name: "48x40 9-Block", price: "$5.00" }]
+}, {
+  name: "Sayweee",
+  contacts: [{ name: "Steven Yu", role: "Logistics Mgr", phone: "(973) 555-0404", email: "syu@sayweee.com" }],
+  city: "Clifton, NJ",
+  balance: 12750.00,
+  products: [{ name: "Core (recycling)", price: "$1.00" }]
+}, {
+  name: "Yankee Clipper",
+  contacts: [{ name: "David Testa", role: "Owner", phone: "(732) 555-0505", email: "dtesta@yankeeclipper.com" }, { name: "Maria T.", role: "Dispatch", phone: "(732) 555-0506", email: "maria@yankeeclipper.com" }],
+  city: "N. Brunswick, NJ",
+  balance: 3400.00,
+  products: [{ name: "48x40 Grade B", price: "$5.00" }]
+}, {
+  name: "Expeditors",
+  contacts: [{ name: "Ralph Perez", role: "Site Lead", phone: "(732) 555-0606", email: "rperez@expeditors.com" }],
+  city: "Edison, NJ",
+  balance: 0,
+  products: [{ name: "48x40 Grade B", price: "$4.00" }]
+}, {
+  name: "SalSon",
+  contacts: [{ name: "Anthony B. Jr.", role: "VP Operations", phone: "(973) 555-0707", email: "abotti@salson.com" }, { name: "Tony Sr.", role: "Owner", phone: "(973) 555-0708", email: "tony@salson.com" }],
+  city: "Newark, NJ",
+  balance: 8900.00,
+  products: [{ name: "48x40 Grade B", price: "$4.00" }]
+}, {
+  name: "UDS",
+  contacts: [{ name: "Carl Ingargiola", role: "Purchasing", phone: "(732) 555-0808", email: "carl@udslogistics.com" }],
+  city: "Edison, NJ",
+  balance: 2100.00,
+  products: [{ name: "48x40 HD Block", price: "$8.00" }, { name: "48x40 Blue HD Block", price: "$8.50" }]
+}, {
+  name: "Bettaway",
+  contacts: [{ name: "Daniel Storey", role: "Operations Mgr", phone: "(973) 555-0909", email: "dstorey@bettaway.com" }],
+  city: "Fairfield, NJ",
+  balance: 650.00,
+  products: [{ name: "Core (repairable)", price: "—" }]
+}, {
+  name: "Americold",
+  contacts: [{ name: "Vaibhav Venkat", role: "Warehouse Mgr", phone: "(732) 555-1010", email: "vvenkat@americold.com" }, { name: "Lisa M.", role: "Receiving", phone: "(732) 555-1011", email: "lisa@americold.com" }],
+  city: "Edison, NJ",
+  balance: 5200.00,
+  products: [{ name: "Per PO", price: "—" }]
+}];
+
+// LOGO
+function JNLogo({
+  size = 36,
+  color = "#000"
+}) {
+  return /*#__PURE__*/React.createElement("svg", {
+    width: size,
+    height: size,
+    viewBox: "0 0 100 100"
+  }, /*#__PURE__*/React.createElement("g", {
+    transform: "rotate(45, 50, 50)"
+  }, [0, 1, 2, 3, 4].map(i => /*#__PURE__*/React.createElement("rect", {
+    key: i,
+    x: "15",
+    y: 18 + i * 15,
+    width: "70",
+    height: "10",
+    rx: "5",
+    fill: color,
+    opacity: 0.7 + i * 0.06
+  }))));
+}
+
+// STATUS DOT
+function StatusDot({
+  status
+}) {
+  const colors = {
+    Pending: "#AAA",
+    Scheduled: "#FFD43B",
+    Loaded: T.orange,
+    "On Route": "#00C853",
+    Completed: "#00C853"
+  };
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 8,
+      height: 8,
+      borderRadius: "50%",
+      background: colors[status] || "#AAA",
+      border: "1.5px solid #000",
+      display: "inline-block",
+      flexShrink: 0
+    }
+  });
+}
+
+// HEADER
+function HeaderBar() {
+  const now = new Date();
+  const day = now.toLocaleDateString("en-US", {
+    weekday: "short"
+  }).toUpperCase();
+  const date = now.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric"
+  }).toUpperCase();
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: T.white,
+      borderBottom: T.border,
+      paddingLeft: 20,
+      paddingRight: 20,
+      paddingBottom: 12,
+      paddingTop: "calc(env(safe-area-inset-top, 16px) + 8px)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement(JNLogo, {
+    size: 34,
+    color: "#000"
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontHead,
+      fontWeight: 600,
+      fontSize: 20,
+      color: T.black,
+      letterSpacing: -0.5
+    }
+  }, "YARDHOUSE")), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 11,
+      fontWeight: 500,
+      color: T.black,
+      letterSpacing: 1,
+      opacity: 0.6
+    }
+  }, day, " ", date));
+}
+
+// TAB BAR
+function TabBar({
+  activeTab,
+  onTabChange
+}) {
+  const tabs = [{
+    id: "home",
+    label: "DISPATCH"
+  }, {
+    id: "actions",
+    label: "ACTIONS"
+  }, {
+    id: "accounts",
+    label: "ACCOUNTS"
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-around",
+      paddingTop: 10,
+      paddingBottom: "max(env(safe-area-inset-bottom, 16px), 20px)",
+      flexShrink: 0,
+      background: T.white,
+      borderTop: T.border,
+      alignItems: "center"
+    }
+  }, tabs.map(t => {
+    const active = activeTab === t.id;
+    return /*#__PURE__*/React.createElement("button", {
+      key: t.id,
+      onClick: () => onTabChange(t.id),
+      style: {
+        background: active ? T.black : "none",
+        border: active ? "none" : T.border,
+        borderRadius: 20,
+        cursor: "pointer",
+        padding: "7px 20px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: T.fontMono,
+        fontSize: 10,
+        fontWeight: 600,
+        letterSpacing: 1.5,
+        color: active ? T.white : T.black,
+        textTransform: "uppercase",
+        lineHeight: 1
+      }
+    }, t.label));
+  }));
+}
+
+// DELIVERY ROW
+function DeliveryRow({
+  d,
+  isSelected,
+  onSelect
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    onClick: () => onSelect(isSelected ? null : d.id),
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: isSelected ? "9px 6px" : "9px 0",
+      borderBottom: "1px solid rgba(0,0,0,0.12)",
+      cursor: "pointer",
+      background: isSelected ? "rgba(207,184,255,0.2)" : "transparent",
+      borderRadius: isSelected ? T.radius : 0,
+      transition: "background 0.15s, border-radius 0.15s, padding 0.15s"
+    }
+  }, /*#__PURE__*/React.createElement(StatusDot, {
+    status: d.status
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontHead,
+      fontSize: 13,
+      fontWeight: 600,
+      color: T.black,
+      width: 120,
+      flexShrink: 0,
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, d.customer), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 9,
+      fontWeight: 700,
+      background: d.type === "CPU" ? T.cream : T.lavender,
+      border: T.borderThin,
+      borderRadius: 4,
+      padding: "2px 5px",
+      letterSpacing: 0.5,
+      flexShrink: 0
+    }
+  }, d.type), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 11,
+      fontWeight: 400,
+      color: T.black,
+      opacity: 0.5,
+      flex: 1,
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, d.driver), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 12,
+      fontWeight: 400,
+      color: T.black,
+      opacity: 0.6,
+      flexShrink: 0,
+      letterSpacing: 2
+    }
+  }, "●".repeat(d.trip)));
+}
+const DRIVERS = ["Adalid", "Tito", "Nick"];
+
+// HOME TAB
+function HomeTab() {
+  const [deliveries, setDeliveries] = useState(DELIVERIES);
+  const [selected, setSelected] = useState(null);
+  const [closing, setClosing] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const detailRef = useRef(null);
+  useEffect(() => {
+    if (selected && detailRef.current) {
+      setTimeout(() => {
+        if (detailRef.current) {
+          const card = detailRef.current.getBoundingClientRect();
+          const scrollArea = detailRef.current.closest(".scroll-area");
+          if (scrollArea) {
+            const area = scrollArea.getBoundingClientRect();
+            const overflow = card.bottom - area.bottom;
+            if (overflow > 0) {
+              scrollArea.scrollBy({
+                top: overflow + 20,
+                behavior: "smooth"
+              });
+            }
+          }
+        }
+      }, 280);
+    }
+  }, [selected, editing]);
+  const handleSelect = id => {
+    if (editing) return;
+    if (selected === id) {
+      setClosing(id);
+      setTimeout(() => {
+        setClosing(null);
+        setSelected(null);
+      }, 200);
+    } else {
+      if (selected) {
+        setClosing(selected);
+        setTimeout(() => {
+          setClosing(null);
+          setSelected(id);
+        }, 200);
+      } else {
+        setSelected(id);
+      }
+    }
+  };
+  const isWeekend = [0, 6].includes(new Date().getDay());
+  const total = deliveries.length;
+  const done = deliveries.filter(d => d.status === "Completed").length;
+  const active = total - done;
+  const lblS = {
+    fontFamily: T.fontMono,
+    fontSize: 9,
+    fontWeight: 600,
+    letterSpacing: 1.2,
+    color: T.black,
+    opacity: 0.5,
+    display: "block",
+    marginBottom: 4
+  };
+  const inpS = {
+    width: "100%",
+    padding: "8px 10px",
+    borderRadius: 8,
+    border: T.borderThin,
+    background: T.white,
+    color: T.black,
+    fontFamily: T.fontMono,
+    fontSize: 12,
+    fontWeight: 500,
+    outline: "none",
+    boxSizing: "border-box",
+    marginBottom: 10
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "scroll-area",
+    onClick: function() { if (editing) { setEditing(null); setSelected(null); } }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 20px 4px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: T.fontHead,
+      fontWeight: 600,
+      fontSize: 20,
+      color: T.black,
+      letterSpacing: -0.3
+    }
+  }, isWeekend ? "Monday's Dispatch" : "Today's Dispatch")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      padding: "10px 20px 6px"
+    }
+  }, [{
+    label: "TOTAL",
+    value: total,
+    bg: T.white
+  }, {
+    label: "ACTIVE",
+    value: active,
+    bg: T.orangeLight
+  }, {
+    label: "DONE",
+    value: done,
+    bg: T.green
+  }].map(k => /*#__PURE__*/React.createElement("div", {
+    key: k.label,
+    style: {
+      flex: 1,
+      background: k.bg,
+      border: "1.5px solid #000",
+      borderRadius: 50,
+      padding: "6px 10px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 8,
+      fontWeight: 600,
+      letterSpacing: 1.2,
+      color: T.black,
+      opacity: 0.5
+    }
+  }, k.label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 18,
+      fontWeight: 700,
+      color: T.black
+    }
+  }, k.value)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "8px 20px 4px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      height: 6,
+      borderRadius: 3,
+      overflow: "hidden",
+      border: T.borderThin
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: `${done / total * 100}%`,
+      background: "#00C853",
+      transition: "width 0.3s"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: `${active / total * 100}%`,
+      background: T.orange,
+      transition: "width 0.3s"
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "12px 20px 4px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 8
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 9,
+      fontWeight: 600,
+      letterSpacing: 1,
+      color: T.black,
+      opacity: 0.35,
+      width: 120,
+      flexShrink: 0
+    }
+  }, "CUSTOMER"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 9,
+      fontWeight: 600,
+      letterSpacing: 1,
+      color: T.black,
+      opacity: 0.35,
+      width: 30,
+      flexShrink: 0
+    }
+  }, "TYP"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 9,
+      fontWeight: 600,
+      letterSpacing: 1,
+      color: T.black,
+      opacity: 0.35,
+      flex: 1
+    }
+  }, "DRIVER"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 9,
+      fontWeight: 600,
+      letterSpacing: 1,
+      color: T.black,
+      opacity: 0.35,
+      flexShrink: 0
+    }
+  }, "TRIP")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 20px"
+    }
+  }, deliveries.map(d => {
+    const isOpen = selected === d.id;
+    const isClosing = closing === d.id;
+    const showCard = isOpen || isClosing;
+    const isEditing = editing && editing.id === d.id;
+    return /*#__PURE__*/React.createElement("div", {
+      key: d.id
+    }, /*#__PURE__*/React.createElement(DeliveryRow, {
+      d: d,
+      isSelected: isOpen,
+      onSelect: handleSelect
+    }), showCard && !isEditing && /*#__PURE__*/React.createElement("div", {
+      ref: isOpen ? detailRef : null,
+      className: isClosing ? "detail-card-closing" : "detail-card",
+      style: {
+        margin: "4px 0 8px",
+        padding: "12px 16px",
+        background: T.lavender,
+        border: T.border,
+        borderRadius: T.radius
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: T.fontHead,
+        fontSize: 15,
+        fontWeight: 700,
+        color: T.black
+      }
+    }, d.customer), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: T.fontMono,
+        fontSize: 10,
+        fontWeight: 600,
+        background: T.white,
+        border: T.borderThin,
+        borderRadius: 4,
+        padding: "2px 8px",
+        letterSpacing: 0.5
+      }
+    }, d.status.toUpperCase())), /*#__PURE__*/React.createElement("p", {
+      style: {
+        fontFamily: T.fontMono,
+        fontSize: 12,
+        fontWeight: 400,
+        color: T.black,
+        opacity: 0.7,
+        marginTop: 6
+      }
+    }, d.notes), /*#__PURE__*/React.createElement("p", {
+      style: {
+        fontFamily: T.fontMono,
+        fontSize: 11,
+        fontWeight: 400,
+        color: T.black,
+        opacity: 0.5,
+        marginTop: 4
+      }
+    }, d.driver, " \xB7 Trip ", d.trip, " \xB7 ", d.type === "CPU" ? "Customer Pick Up" : "Delivery"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 8,
+        marginTop: 10
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: function(e) {
+        e.stopPropagation();
+        showModal({
+          title: "Delete Delivery",
+          message: "Remove " + d.customer + " (" + d.notes + ") from today\u2019s dispatch?",
+          confirmLabel: "DELETE",
+          confirmColor: "#E53935",
+          confirmTextColor: "#fff",
+          cancelLabel: "KEEP"
+        }).then(function(ok) {
+          if (ok) {
+            setDeliveries(function(prev) { return prev.filter(function(dd) { return dd.id !== d.id; }); });
+            setSelected(null);
+          }
+        });
+      },
+      style: {
+        flex: 1,
+        padding: "9px",
+        borderRadius: 10,
+        border: T.border,
+        background: T.red,
+        color: T.black,
+        fontFamily: T.fontMono,
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: 1,
+        cursor: "pointer"
+      }
+    }, "DELETE"), /*#__PURE__*/React.createElement("button", {
+      onClick: e => {
+        e.stopPropagation();
+        setEditing({
+          ...d
+        });
+      },
+      style: {
+        flex: 1,
+        padding: "9px",
+        borderRadius: 10,
+        border: T.border,
+        background: T.white,
+        color: T.black,
+        fontFamily: T.fontMono,
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: 1,
+        cursor: "pointer"
+      }
+    }, "EDIT"), /*#__PURE__*/React.createElement("button", {
+      onClick: e => {
+        e.stopPropagation();
+        window.open("https://maps.apple.com/?saddr=271+Meadow+Rd,+Edison,+NJ+08817&daddr=" + encodeURIComponent(d.address), "_blank");
+      },
+      style: {
+        flex: 1,
+        padding: "9px",
+        borderRadius: 10,
+        border: T.border,
+        background: T.cream,
+        color: T.black,
+        fontFamily: T.fontMono,
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: 1,
+        cursor: "pointer"
+      }
+    }, "MAP"))), isEditing && /*#__PURE__*/React.createElement("div", {
+      ref: detailRef,
+      className: isClosing ? "detail-card-closing" : "detail-card",
+      onClick: function(e) { e.stopPropagation(); },
+      style: {
+        margin: "4px 0 8px",
+        padding: "14px 16px",
+        background: T.lavender,
+        border: T.border,
+        borderRadius: T.radius
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 12
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontFamily: T.fontHead,
+        fontSize: 15,
+        fontWeight: 700,
+        color: T.black
+      }
+    }, "Edit Delivery"), /*#__PURE__*/React.createElement("button", {
+      onClick: e => {
+        e.stopPropagation();
+        setEditing(null);
+      },
+      style: {
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        fontFamily: T.fontMono,
+        fontSize: 22,
+        fontWeight: 700,
+        color: T.black,
+        lineHeight: 1,
+        padding: "4px 8px"
+      }
+    }, "\u00D7")), /*#__PURE__*/React.createElement("label", {
+      style: lblS
+    }, "CUSTOMER"), /*#__PURE__*/React.createElement("div", {
+      style: { position: "relative", marginBottom: 10 }
+    }, /*#__PURE__*/React.createElement("input", {
+      value: editing.customer,
+      onChange: e => {
+        setEditing({ ...editing, customer: e.target.value });
+      },
+      onKeyDown: e => {
+        if (e.key === "Enter") {
+          var q2 = editing.customer.toLowerCase().trim();
+          var m2 = q2.length > 0 ? CUSTOMERS.filter(function(c) { return c.name.toLowerCase().includes(q2) && c.name !== editing.customer; }) : [];
+          if (m2.length > 0) { setEditing({ ...editing, customer: m2[0].name }); }
+          e.target.blur();
+        }
+      },
+      style: Object.assign({}, inpS, { marginBottom: 0 })
+    }), (() => {
+      const q = editing.customer.toLowerCase().trim();
+      const matches = q.length > 0 ? CUSTOMERS.filter(c => c.name.toLowerCase().includes(q) && c.name !== editing.customer) : [];
+      if (matches.length === 0) return null;
+      return /*#__PURE__*/React.createElement("div", {
+        style: { position: "absolute", top: "100%", left: 0, right: 0, zIndex: 10, background: T.white, border: T.border, borderRadius: 8, marginTop: 2, maxHeight: 150, overflowY: "auto" }
+      }, matches.slice(0, 5).map(c => /*#__PURE__*/React.createElement("div", {
+        key: c.name,
+        onClick: e => { e.stopPropagation(); setEditing({ ...editing, customer: c.name }); },
+        style: { padding: "8px 10px", cursor: "pointer", borderBottom: T.borderThin, fontFamily: T.fontMono, fontSize: 12, fontWeight: 500, color: T.black }
+      }, c.name)));
+    })()), /*#__PURE__*/React.createElement("label", {
+      style: lblS
+    }, "STATUS"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 4,
+        marginBottom: 10
+      }
+    }, ["Pending", "Scheduled", "Loaded", "On Route", "Completed"].map(s => /*#__PURE__*/React.createElement("button", {
+      key: s,
+      onClick: e => {
+        e.stopPropagation();
+        setEditing({
+          ...editing,
+          status: s
+        });
+      },
+      style: {
+        flex: 1,
+        padding: "6px 2px",
+        borderRadius: 6,
+        border: editing.status === s ? "2px solid #000" : T.borderThin,
+        background: editing.status === s ? T.white : "rgba(255,255,255,0.4)",
+        fontFamily: T.fontMono,
+        fontSize: 8,
+        fontWeight: editing.status === s ? 700 : 500,
+        letterSpacing: 0.3,
+        cursor: "pointer",
+        color: T.black
+      }
+    }, s.toUpperCase()))), /*#__PURE__*/React.createElement("label", {
+      style: lblS
+    }, "TYPE"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        marginBottom: 10
+      }
+    }, ["DEL", "P/U", "DROP", "PICK", "CPU"].map(t => /*#__PURE__*/React.createElement("button", {
+      key: t,
+      onClick: e => {
+        e.stopPropagation();
+        setEditing({
+          ...editing,
+          type: t
+        });
+      },
+      style: {
+        padding: "6px 10px",
+        borderRadius: 6,
+        border: editing.type === t ? "2px solid #000" : T.borderThin,
+        background: editing.type === t ? t === "CPU" ? T.cream : T.lavender : "rgba(255,255,255,0.4)",
+        fontFamily: T.fontMono,
+        fontSize: 9,
+        fontWeight: editing.type === t ? 700 : 500,
+        letterSpacing: 0.5,
+        cursor: "pointer",
+        color: T.black
+      }
+    }, t))), /*#__PURE__*/React.createElement("label", {
+      style: lblS
+    }, "DRIVER"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        marginBottom: 10
+      }
+    }, DRIVERS.map(dr => /*#__PURE__*/React.createElement("button", {
+      key: dr,
+      onClick: e => {
+        e.stopPropagation();
+        setEditing({
+          ...editing,
+          driver: dr
+        });
+      },
+      style: {
+        flex: 1,
+        padding: "7px 4px",
+        borderRadius: 6,
+        border: editing.driver === dr ? "2px solid #000" : T.borderThin,
+        background: editing.driver === dr ? T.white : "rgba(255,255,255,0.4)",
+        fontFamily: T.fontMono,
+        fontSize: 10,
+        fontWeight: editing.driver === dr ? 700 : 500,
+        letterSpacing: 0.3,
+        cursor: "pointer",
+        color: T.black
+      }
+    }, dr.toUpperCase()))), /*#__PURE__*/React.createElement("label", {
+      style: lblS
+    }, "TRIP #"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
+        marginBottom: 10
+      }
+    }, [1, 2, 3, 4, 5, 6, 7, 8].map(n => /*#__PURE__*/React.createElement("button", {
+      key: n,
+      onClick: e => {
+        e.stopPropagation();
+        setEditing({
+          ...editing,
+          trip: n
+        });
+      },
+      style: {
+        width: 36,
+        height: 36,
+        borderRadius: 8,
+        border: editing.trip === n ? "2px solid #000" : T.borderThin,
+        background: editing.trip === n ? T.white : "rgba(255,255,255,0.4)",
+        fontFamily: T.fontMono,
+        fontSize: 14,
+        fontWeight: editing.trip === n ? 700 : 500,
+        cursor: "pointer",
+        color: T.black,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }
+    }, n))), /*#__PURE__*/React.createElement("label", {
+      style: lblS
+    }, "NOTES"), /*#__PURE__*/React.createElement("input", {
+      value: editing.notes,
+      onChange: e => setEditing({
+        ...editing,
+        notes: e.target.value
+      }),
+      style: inpS
+    }), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 8,
+        marginTop: 14
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: e => {
+        e.stopPropagation();
+        setDeliveries(prev => prev.map(del => del.id === editing.id ? {
+          ...editing
+        } : del));
+        setClosing(selected);
+        setTimeout(() => { setEditing(null); setClosing(null); setSelected(null); }, 200);
+      },
+      style: {
+        flex: 1,
+        padding: "10px",
+        borderRadius: 10,
+        border: T.border,
+        background: T.orange,
+        color: "#fff",
+        fontFamily: T.fontMono,
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: 1,
+        cursor: "pointer"
+      }
+    }, "SAVE"), /*#__PURE__*/React.createElement("button", {
+      onClick: e => {
+        e.stopPropagation();
+        setEditing(null);
+      },
+      style: {
+        flex: 1,
+        padding: "10px",
+        borderRadius: 10,
+        border: T.border,
+        background: T.white,
+        color: T.black,
+        fontFamily: T.fontMono,
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: 1,
+        cursor: "pointer"
+      }
+    }, "CANCEL"))));
+  })));
+}
+
+// Global flag so tab swipe knows a task delete swipe is active
+var _taskSwipeActive = false;
+
+// SWIPEABLE TASK ROW
+function SwipeableTask(props) {
+  var swipeRef = useRef({ startX: 0, startY: 0, swiping: false, locked: false });
+  var _s = useState(0), offsetX = _s[0], setOffsetX = _s[1];
+  var _d = useState(false), dismissed = _d[0], setDismissed = _d[1];
+  var threshold = -90;
+
+  function onTS(e) {
+    swipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, swiping: false, locked: false };
+  }
+  function onTM(e) {
+    if (swipeRef.current.locked) return;
+    var dx = e.touches[0].clientX - swipeRef.current.startX;
+    var dy = e.touches[0].clientY - swipeRef.current.startY;
+    if (!swipeRef.current.swiping) {
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 5) { swipeRef.current.locked = true; return; }
+      if (Math.abs(dx) > 5) swipeRef.current.swiping = true;
+    }
+    if (swipeRef.current.swiping && dx < 0) {
+      e.preventDefault();
+      _taskSwipeActive = true;
+      setOffsetX(Math.max(dx * 0.7, -180));
+    }
+  }
+  function onTE() {
+    if (offsetX < threshold) {
+      setDismissed(true);
+      setOffsetX(-500);
+      setTimeout(function() { props.onDelete(); }, 350);
+    } else {
+      setOffsetX(0);
+    }
+    swipeRef.current.swiping = false;
+    setTimeout(function() { _taskSwipeActive = false; }, 50);
+  }
+
+  var isMoving = swipeRef.current.swiping;
+  var showDelete = offsetX < -10;
+  /* Extend the row past the parent's 20px padding so the card can slide fully off the left edge */
+  return /*#__PURE__*/React.createElement("div", {
+    style: { marginBottom: 5, marginLeft: -20, marginRight: -20, paddingLeft: 20, paddingRight: 20,
+      overflow: "hidden",
+      maxHeight: dismissed ? 0 : 200, marginTop: dismissed ? 0 : undefined,
+      opacity: dismissed ? 0 : 1,
+      transition: dismissed ? "max-height 0.3s ease-out 0.05s, opacity 0.2s ease-out, margin 0.3s ease-out 0.05s" : "none" }
+  },
+  /*#__PURE__*/React.createElement("div", {
+    style: { position: "relative" }
+  },
+  /* Red delete label — sits behind the card */
+  showDelete && /*#__PURE__*/React.createElement("div", {
+    style: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, background: "#FF3B30", borderRadius: 10,
+      display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 16 }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: "#fff" }
+  }, "DELETE")),
+  /* The entire card slides as one unit */
+  /*#__PURE__*/React.createElement("div", {
+    onTouchStart: onTS, onTouchMove: onTM, onTouchEnd: onTE,
+    style: { position: "relative", zIndex: 1, transform: "translateX(" + offsetX + "px)",
+      transition: isMoving ? "none" : "transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }
+  }, props.children)));
+}
+
+// ACTIONS TAB
+function ActionsTab() {
+  const [section, setSection] = useState("today");
+  const [selectedEmail, setSelectedEmail] = useState(null);
+  const [tasks, setTasks] = useState(INIT_TASKS);
+  const [newTask, setNewTask] = useState("");
+  const [syncOnline, setSyncOnline] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState(null);
+
+  // Try initial sync on mount
+  useEffect(function() {
+    setSyncing(true);
+    TaskSync.checkConnection().then(function(result) {
+      if (result.online && result.tasks && result.tasks.length > 0) {
+        setTasks(result.tasks.map(function(t, i) {
+          return { id: t.id || (Date.now() + i), text: t.text, tag: t.tag || "NEUTRAL", done: t.done || false };
+        }));
+        setSyncOnline(true);
+        setLastSync(new Date());
+      }
+      setSyncing(false);
+    });
+  }, []);
+
+  function doSync() {
+    setSyncing(true);
+    TaskSync.fetchTasks().then(function(remoteTasks) {
+      if (remoteTasks && remoteTasks.length > 0) {
+        setTasks(remoteTasks.map(function(t, i) {
+          return { id: t.id || (Date.now() + i), text: t.text, tag: t.tag || "NEUTRAL", done: t.done || false };
+        }));
+        setSyncOnline(true);
+        setLastSync(new Date());
+      }
+      setSyncing(false);
+    });
+  }
+
+  function addTask(text, tag) {
+    var localTask = { id: Date.now(), text: text, tag: tag, done: false };
+    setTasks(function(prev) { return [localTask].concat(prev); });
+    if (syncOnline) {
+      TaskSync.createTask(text, tag).then(function(remote) {
+        if (remote && remote.id) {
+          setTasks(function(prev) { return prev.map(function(t) { return t.id === localTask.id ? Object.assign({}, t, { id: remote.id }) : t; }); });
+        }
+      });
+    }
+  }
+
+  function haptic(style) {
+    /* Use Web Vibration API — works on iOS Safari 16.4+ and Android Chrome */
+    if (navigator.vibrate) {
+      if (style === "success") navigator.vibrate([8, 50, 6]);        /* two taps — like Apple's .success */
+      else if (style === "light") navigator.vibrate(4);              /* single short — like Apple's .light */
+      else if (style === "medium") navigator.vibrate(8);             /* single medium — like Apple's .medium */
+    }
+  }
+
+  function toggleDone(taskId, done) {
+    haptic(done ? "success" : "light");
+    setTasks(function(prev) { return prev.map(function(t) { return t.id === taskId ? Object.assign({}, t, { done: done }) : t; }); });
+    if (syncOnline && typeof taskId === "string") {
+      TaskSync.updateTask(taskId, { done: done });
+    }
+  }
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [deletingTask, setDeletingTask] = useState(null);
+
+  function deleteTask(taskId) {
+    haptic("medium");
+    setDeletingTask(taskId);
+    setTimeout(function() {
+      setTasks(function(prev) { return prev.filter(function(t) { return t.id !== taskId; }); });
+      setDeletingTask(null);
+      if (syncOnline && typeof taskId === "string") {
+        TaskSync.deleteTask(taskId);
+      }
+    }, 350);
+  }
+
+  function setTaskTag(taskId, tag) {
+    haptic("light");
+    setTasks(function(prev) { return prev.map(function(t) { return t.id === taskId ? Object.assign({}, t, { tag: tag }) : t; }); });
+    setSelectedTask(null);
+    if (syncOnline && typeof taskId === "string") {
+      TaskSync.updateTask(taskId, { tag: tag });
+    }
+  }
+
+  var TABS = ["today", "tasks", "schedule"];
+  var tabSwipeRef = useRef({ startX: 0, startY: 0, active: false, locked: false });
+  var _ts = useState(0), tabOffsetX = _ts[0], setTabOffsetX = _ts[1];
+  var _ta = useState(false), tabAnimating = _ta[0], setTabAnimating = _ta[1];
+
+  function tabTS(e) {
+    if (tabAnimating) return;
+    tabSwipeRef.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, active: false, locked: false };
+  }
+  function tabTM(e) {
+    if (tabAnimating || tabSwipeRef.current.locked || _taskSwipeActive) return;
+    var dx = e.touches[0].clientX - tabSwipeRef.current.startX;
+    var dy = e.touches[0].clientY - tabSwipeRef.current.startY;
+    if (!tabSwipeRef.current.active) {
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) { tabSwipeRef.current.locked = true; return; }
+      if (Math.abs(dx) > 12) {
+        tabSwipeRef.current.active = true;
+        /* Lock vertical scroll by disabling overflow on the scroll container */
+        if (scrollAreaRef.current) scrollAreaRef.current.style.overflowY = "hidden";
+      }
+      else return;
+    }
+    /* On tasks tab, block left swipe for tab nav ONLY if a task swipe-to-delete is active */
+    if (section === "tasks" && dx < 0 && _taskSwipeActive) return;
+    var tabIdx = TABS.indexOf(section);
+    if ((dx > 0 && tabIdx === 0) || (dx < 0 && tabIdx === TABS.length - 1)) {
+      setTabOffsetX(dx * 0.2);
+    } else {
+      setTabOffsetX(dx * 0.5);
+    }
+  }
+  function tabTE() {
+    /* Restore vertical scrolling */
+    if (scrollAreaRef.current) scrollAreaRef.current.style.overflowY = "scroll";
+    if (!tabSwipeRef.current.active || _taskSwipeActive) { setTabOffsetX(0); tabSwipeRef.current.active = false; return; }
+    var tabIdx = TABS.indexOf(section);
+    var swipeThreshold = 50;
+    if (tabOffsetX > swipeThreshold && tabIdx > 0) {
+      setTabAnimating(true);
+      setTabOffsetX(400);
+      setTimeout(function() { setSection(TABS[tabIdx - 1]); setTabOffsetX(0); setTabAnimating(false); }, 250);
+    } else if (tabOffsetX < -swipeThreshold && tabIdx < TABS.length - 1) {
+      setTabAnimating(true);
+      setTabOffsetX(-400);
+      setTimeout(function() { setSection(TABS[tabIdx + 1]); setTabOffsetX(0); setTabAnimating(false); }, 250);
+    } else {
+      setTabOffsetX(0);
+    }
+    tabSwipeRef.current.active = false;
+  }
+
+  var tabIsMoving = tabSwipeRef.current.active;
+  var tabTransition = tabIsMoving ? "none" : tabAnimating ? "transform 0.25s ease-out, opacity 0.25s ease-out" : "none";
+  var tabOpacity = tabAnimating ? 0 : Math.max(0.3, 1 - Math.abs(tabOffsetX) / 400);
+  var scrollAreaRef = useRef(null);
+
+  /* Reset scroll to top when switching tabs */
+  useEffect(function() {
+    if (scrollAreaRef.current) scrollAreaRef.current.scrollTop = 0;
+  }, [section]);
+
+  return /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", flexDirection: "column", flex: "1 1 0", minHeight: 0 }
+  },
+  /* Fixed header + segmented control */
+  /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 20px 12px",
+      background: "#E8E8E8",
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: T.fontHead,
+      fontWeight: 600,
+      fontSize: 20,
+      color: T.black,
+      letterSpacing: -0.3,
+      marginBottom: 10
+    }
+  }, "Actions"),
+  /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      border: T.border,
+      borderRadius: 20,
+      overflow: "hidden"
+    }
+  }, [{
+    id: "today",
+    label: "TODAY"
+  }, {
+    id: "tasks",
+    label: "TASKS"
+  }, {
+    id: "schedule",
+    label: "SCHEDULE"
+  }].map((seg, i) => /*#__PURE__*/React.createElement("button", {
+    key: seg.id,
+    onClick: function() { setSection(seg.id); },
+    style: {
+      flex: 1,
+      padding: "9px 0",
+      border: "none",
+      borderRight: i < 2 ? T.border : "none",
+      background: section === seg.id ? T.black : T.white,
+      color: section === seg.id ? T.white : T.black,
+      fontFamily: T.fontMono,
+      fontSize: 10,
+      fontWeight: 700,
+      cursor: "pointer",
+      letterSpacing: 1
+    }
+  }, seg.label)))),
+  /* Scrollable content area — only this part slides on swipe */
+  /*#__PURE__*/React.createElement("div", {
+    ref: scrollAreaRef,
+    className: "scroll-area",
+    onTouchStart: tabTS, onTouchMove: tabTM, onTouchEnd: tabTE
+  }, /*#__PURE__*/React.createElement("div", {
+    style: { transform: "translateX(" + tabOffsetX + "px)", opacity: tabOpacity,
+      transition: tabTransition, willChange: tabIsMoving || tabAnimating ? "transform, opacity" : "auto" }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 20px 20px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 6
+    }
+  }, section === "today" && TODAYS_EMAILS.map(function(m) { var isOpen = selectedEmail === m.id; return /*#__PURE__*/React.createElement("div", {
+    key: m.id,
+    onClick: function() { setSelectedEmail(isOpen ? null : m.id); },
+    style: {
+      padding: "10px 14px",
+      background: isOpen ? T.lavender : m.unread ? T.white : "rgba(255,255,255,0.5)",
+      border: isOpen ? T.border : m.unread ? "1.5px solid " + T.orange : T.border,
+      borderRadius: 12,
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", alignItems: "center", gap: 6 }
+  }, m.unread && /*#__PURE__*/React.createElement("div", {
+    style: { width: 6, height: 6, borderRadius: 3, background: T.orange, flexShrink: 0 }
+  }), /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontHead, fontSize: 13, fontWeight: 700, color: T.black }
+  }, m.from)), /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontMono, fontSize: 9, fontWeight: 500, color: T.black, opacity: 0.4, letterSpacing: 0.5 }
+  }, m.time)), /*#__PURE__*/React.createElement("div", {
+    style: { fontFamily: T.fontMono, fontSize: 9, fontWeight: 600, color: T.black, opacity: 0.4, letterSpacing: 0.5, marginBottom: 3 }
+  }, m.company), /*#__PURE__*/React.createElement("div", {
+    style: { fontFamily: T.fontBody, fontSize: 12, fontWeight: m.unread ? 600 : 400, color: T.black, lineHeight: 1.4 }
+  }, m.subject), isOpen && /*#__PURE__*/React.createElement("div", {
+    style: { marginTop: 10, paddingTop: 10, borderTop: T.borderThin }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: { fontFamily: T.fontBody, fontSize: 12, fontWeight: 400, color: T.black, opacity: 0.7, lineHeight: 1.5, marginBottom: 10 }
+  }, m.summary), /*#__PURE__*/React.createElement("button", {
+    onClick: function(e) {
+      e.stopPropagation();
+      var _m = m;
+      showModal({
+        title: "Reply to " + _m.from,
+        message: "Re: " + _m.subject,
+        input: true,
+        inputLabel: "MESSAGE",
+        inputPlaceholder: "Type your reply...",
+        confirmLabel: "SEND",
+        confirmColor: T.orange,
+        confirmTextColor: "#fff",
+        cancelLabel: "CANCEL"
+      }).then(function(val) {
+        if (val) window.location.href = "mailto:" + _m.email + "?subject=Re: " + encodeURIComponent(_m.subject) + "&body=" + encodeURIComponent(val);
+      });
+    },
+    style: { display: "block", width: "100%", textAlign: "center", padding: "10px", borderRadius: 8, border: T.border, background: T.orange, color: "#fff", fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+  }, "REPLY"))); }), section === "tasks" && /*#__PURE__*/React.createElement("div", null,
+    syncing && /*#__PURE__*/React.createElement("div", {
+      style: { textAlign: "center", padding: "6px 0 10px", fontFamily: T.fontMono, fontSize: 9, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.35 }
+    }, "\u21BB SYNCING..."),
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: "flex", gap: 6, marginBottom: 10 }
+    }, /*#__PURE__*/React.createElement("input", {
+      value: newTask,
+      onChange: function(e) { setNewTask(e.target.value); },
+      onKeyDown: function(e) { if (e.key === "Enter" && newTask.trim()) { addTask(newTask.trim(), "NEUTRAL"); setNewTask(""); } },
+      placeholder: "Add a task...",
+      style: { flex: 1, padding: "8px 10px", borderRadius: 8, border: T.border, background: T.white, color: T.black, fontFamily: T.fontMono, fontSize: 11, fontWeight: 500, outline: "none", boxSizing: "border-box" }
+    })),
+    tasks.filter(function(t) { return !t.done; }).map(function(t) {
+      var tagColors = { URG: T.red, PASSIVE: "#CFB8FF", NEUTRAL: T.green };
+      var isSelected = selectedTask === t.id;
+      return /*#__PURE__*/React.createElement(SwipeableTask, {
+        key: t.id,
+        onDelete: function() { deleteTask(t.id); }
+      },
+      /*#__PURE__*/React.createElement("div", {
+        onClick: function() { setSelectedTask(isSelected ? null : t.id); },
+        style: { background: tagColors[t.tag] || T.green, border: T.border, borderRadius: 10, cursor: "pointer", overflow: "hidden" }
+      },
+      /*#__PURE__*/React.createElement("div", {
+        style: { display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px" }
+      }, /*#__PURE__*/React.createElement("div", {
+        onClick: function(e) { e.stopPropagation(); toggleDone(t.id, true); },
+        style: { width: 18, height: 18, borderRadius: 4, border: "1.5px solid rgba(0,0,0,0.25)", cursor: "pointer", flexShrink: 0, marginTop: 1 }
+      }), /*#__PURE__*/React.createElement("div", {
+        style: { fontFamily: T.fontBody, fontSize: 13, fontWeight: 500, color: T.black, lineHeight: 1.4, flex: 1 }
+      }, t.text)),
+      isSelected && /*#__PURE__*/React.createElement("div", {
+        className: "detail-card",
+        style: { display: "flex", gap: 6, padding: "0 12px 10px" }
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: function(e) { e.stopPropagation(); setTaskTag(t.id, "URG"); },
+        style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: T.red, color: T.black, fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+      }, "URGENT"), /*#__PURE__*/React.createElement("button", {
+        onClick: function(e) { e.stopPropagation(); setTaskTag(t.id, "PASSIVE"); },
+        style: { flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: "#CFB8FF", color: T.black, fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+      }, "PASSIVE"))));
+    }),
+    tasks.some(function(t) { return t.done; }) && /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("div", {
+        style: { fontFamily: T.fontMono, fontSize: 9, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.3, marginTop: 12, marginBottom: 6 }
+      }, "COMPLETED"),
+      tasks.filter(function(t) { return t.done; }).map(function(t) {
+        return /*#__PURE__*/React.createElement("div", {
+          key: t.id,
+          style: { display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: "rgba(184,255,208,0.2)", border: T.borderThin, borderRadius: 10, marginBottom: 4, opacity: 0.6 }
+        }, /*#__PURE__*/React.createElement("div", {
+          onClick: function() { toggleDone(t.id, false); },
+          style: { width: 18, height: 18, borderRadius: 4, border: "1.5px solid " + T.green, background: T.green, cursor: "pointer", flexShrink: 0, marginTop: 1, display: "flex", alignItems: "center", justifyContent: "center" }
+        }, /*#__PURE__*/React.createElement("span", { style: { color: "#fff", fontSize: 11, fontWeight: 700, lineHeight: 1 } }, "\u2713")),
+          /*#__PURE__*/React.createElement("span", {
+          style: { fontFamily: T.fontBody, fontSize: 12, fontWeight: 400, color: T.black, textDecoration: "line-through", lineHeight: 1.4 }
+        }, t.text));
+      })
+    )
+  ), section === "schedule" && (function() {
+    var dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    var monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    var today = new Date().toISOString().split("T")[0];
+    var grouped = {};
+    SCHEDULE_EVENTS.forEach(function(ev) {
+      if (!grouped[ev.date]) grouped[ev.date] = [];
+      grouped[ev.date].push(ev);
+    });
+    var dates = Object.keys(grouped).sort();
+    return dates.map(function(dateStr) {
+      var dt = new Date(dateStr + "T12:00:00");
+      var isToday = dateStr === today;
+      var dayLabel = isToday ? "TODAY" : dayNames[dt.getDay()];
+      var dateLabel = monthNames[dt.getMonth()] + " " + dt.getDate();
+      return /*#__PURE__*/React.createElement("div", { key: dateStr, style: { marginBottom: 6 } },
+        /*#__PURE__*/React.createElement("div", {
+          style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: { fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, color: isToday ? T.orange : T.black, opacity: isToday ? 1 : 0.4 }
+        }, dayLabel), /*#__PURE__*/React.createElement("span", {
+          style: { fontFamily: T.fontMono, fontSize: 10, fontWeight: 500, letterSpacing: 0.5, color: T.black, opacity: 0.3 }
+        }, dateLabel), /*#__PURE__*/React.createElement("div", {
+          style: { flex: 1, height: 1, background: T.black, opacity: 0.1 }
+        })),
+        grouped[dateStr].map(function(ev, ei) {
+          return /*#__PURE__*/React.createElement("div", {
+            key: ei,
+            style: { display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: isToday ? T.white : "rgba(255,255,255,0.5)", border: T.border, borderRadius: 10, marginBottom: 4 }
+          }, /*#__PURE__*/React.createElement("div", {
+            style: { width: 4, height: 4, borderRadius: 2, marginTop: 6, flexShrink: 0, background: ev.type === "client" ? T.orange : T.lavender }
+          }), /*#__PURE__*/React.createElement("div", { style: { flex: 1 } },
+            /*#__PURE__*/React.createElement("div", {
+              style: { fontFamily: T.fontHead, fontSize: 12, fontWeight: 600, color: T.black, lineHeight: 1.4 }
+            }, ev.title),
+            /*#__PURE__*/React.createElement("div", {
+              style: { fontFamily: T.fontMono, fontSize: 9, fontWeight: 500, color: T.black, opacity: 0.4, marginTop: 2, letterSpacing: 0.5 }
+            }, ev.time, " \u00B7 ", ev.duration),
+            ev.location && /*#__PURE__*/React.createElement("div", {
+              style: { fontFamily: T.fontMono, fontSize: 9, fontWeight: 500, color: T.black, opacity: 0.35, marginTop: 2, letterSpacing: 0.3 }
+            }, "\u{1F4CD} ", ev.location)
+          ));
+        })
+      );
+    });
+  })()))));
+}
+
+// ACCOUNTS TAB
+function AccountsTab() {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [showProducts, setShowProducts] = useState(null);
+  const [showContacts, setShowContacts] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [editingContact, setEditingContact] = useState(null); /* { key, name, role, phone } */
+  const editClickedRef = useRef(false);
+  const filtered = CUSTOMERS.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.contacts.some(function(ct) { return ct.name.toLowerCase().includes(search.toLowerCase()); }));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "scroll-area"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 20px 4px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: T.fontHead,
+      fontWeight: 600,
+      fontSize: 20,
+      color: T.black,
+      letterSpacing: -0.3
+    }
+  }, "Accounts"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 10,
+      fontWeight: 500,
+      color: T.black,
+      opacity: 0.4,
+      letterSpacing: 1,
+      marginTop: 2
+    }
+  }, CUSTOMERS.length, " ACTIVE")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "10px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    placeholder: "SEARCH...",
+    value: search,
+    onChange: e => setSearch(e.target.value),
+    style: {
+      width: "100%",
+      padding: "10px 14px",
+      borderRadius: 12,
+      border: T.border,
+      background: T.white,
+      color: T.black,
+      fontFamily: T.fontMono,
+      fontSize: 12,
+      fontWeight: 500,
+      letterSpacing: 1,
+      outline: "none",
+      boxSizing: "border-box"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      padding: "6px 0",
+      borderBottom: "1px solid rgba(0,0,0,0.15)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 9,
+      fontWeight: 600,
+      letterSpacing: 1,
+      color: T.black,
+      opacity: 0.35,
+      flex: 1
+    }
+  }, "ACCOUNT"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 9,
+      fontWeight: 600,
+      letterSpacing: 1,
+      color: T.black,
+      opacity: 0.35,
+      textAlign: "right"
+    }
+  }, "LOCATION")), filtered.map(c => /*#__PURE__*/React.createElement("div", {
+    key: c.name
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: () => { var next = selected === c.name ? null : c.name; setSelected(next); setShowContacts(null); setShowProducts(null); setSelectedContact(null); setEditingContact(null); },
+    style: {
+      display: "flex",
+      alignItems: "center",
+      padding: selected === c.name ? "10px 6px" : "10px 0",
+      borderBottom: "1px solid rgba(0,0,0,0.08)",
+      cursor: "pointer",
+      background: selected === c.name ? "rgba(207,184,255,0.15)" : "transparent",
+      borderRadius: selected === c.name ? T.radius : 0,
+      transition: "background 0.15s, border-radius 0.15s, padding 0.15s"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontHead,
+      fontSize: 13,
+      fontWeight: 600,
+      color: T.black,
+      flex: 1,
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, c.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontFamily: T.fontMono,
+      fontSize: 10,
+      fontWeight: 500,
+      color: T.black,
+      opacity: 0.5,
+      textAlign: "right",
+      letterSpacing: 0.3,
+      flexShrink: 0
+    }
+  }, c.city)), selected === c.name && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "10px 14px",
+      margin: "4px 0 8px",
+      background: T.lavender,
+      border: T.border,
+      borderRadius: T.radius
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      padding: "8px",
+      borderRadius: 8,
+      border: T.border,
+      background: c.balance > 0 ? T.white : "rgba(184,255,208,0.3)",
+      textAlign: "center",
+      fontFamily: T.fontMono,
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: 0.5,
+      color: c.balance > 0 ? T.black : T.black
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: { fontSize: 7, fontWeight: 600, letterSpacing: 1, opacity: 0.4, marginBottom: 2 }
+  }, "BALANCE"), /*#__PURE__*/React.createElement("div", {
+    style: { fontSize: 13, fontWeight: 700, color: c.balance > 0 ? T.orange : "#4CAF50" }
+  }, c.balance > 0 ? "$" + c.balance.toLocaleString("en-US", { minimumFractionDigits: 2 }) : "$0.00")), /*#__PURE__*/React.createElement("button", {
+    onClick: function(e) { e.stopPropagation(); setShowContacts(showContacts === c.name ? null : c.name); },
+    style: {
+      flex: 1,
+      padding: "8px",
+      borderRadius: 8,
+      border: T.border,
+      background: showContacts === c.name ? T.black : T.white,
+      color: showContacts === c.name ? T.white : T.black,
+      fontFamily: T.fontMono,
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: 1,
+      cursor: "pointer"
+    }
+  }, "CONTACTS"), /*#__PURE__*/React.createElement("button", {
+    onClick: e => { e.stopPropagation(); setShowProducts(showProducts === c.name ? null : c.name); },
+    style: {
+      flex: 1,
+      padding: "8px",
+      borderRadius: 8,
+      border: T.border,
+      background: showProducts === c.name ? T.black : T.cream,
+      color: showProducts === c.name ? T.white : T.black,
+      fontFamily: T.fontMono,
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: 1,
+      cursor: "pointer"
+    }
+  }, "PRODUCTS")), showContacts === c.name && /*#__PURE__*/React.createElement("div", {
+    style: { marginTop: 10 }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", justifyContent: "space-between", padding: "4px 0", marginBottom: 4 }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4 }
+  }, "NAME"), /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4 }
+  }, "ROLE")), c.contacts.map(function(ct, ci) {
+    var ctKey = c.name + "-" + ci;
+    var isEditing = editingContact && editingContact.key === ctKey;
+    return /*#__PURE__*/React.createElement("div", {
+    key: ci,
+    onClick: function(e) { e.stopPropagation(); if (!isEditing) setSelectedContact(selectedContact === ctKey ? null : ctKey); },
+    style: { padding: "8px", background: isEditing ? T.cream : T.white, border: T.borderThin, outline: (selectedContact === ctKey || isEditing) ? "2px solid " + T.orange : "none", outlineOffset: -1, borderRadius: 6, marginBottom: 4, cursor: "pointer", transition: "background 0.2s ease" }
+  },
+  /* Normal view */
+  !isEditing && /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: "flex", justifyContent: "space-between", alignItems: "center" }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: { fontFamily: T.fontMono, fontSize: 11, fontWeight: 600, color: T.black }
+    }, ct.name), /*#__PURE__*/React.createElement("span", {
+      style: { fontFamily: T.fontMono, fontSize: 10, fontWeight: 500, color: T.black, opacity: 0.5 }
+    }, ct.role)), /*#__PURE__*/React.createElement("div", {
+      style: { fontFamily: T.fontMono, fontSize: 10, fontWeight: 400, color: T.black, opacity: 0.4, marginTop: 3 }
+    }, ct.phone),
+    ct.email && /*#__PURE__*/React.createElement("div", {
+      style: { fontFamily: T.fontMono, fontSize: 10, fontWeight: 400, color: T.orange, opacity: 0.7, marginTop: 1 }
+    }, ct.email),
+    (selectedContact === ctKey) && /*#__PURE__*/React.createElement("div", {
+      style: { display: "flex", gap: 6, marginTop: 8 }
+    }, /*#__PURE__*/React.createElement("button", {
+      onClick: function(e) { e.stopPropagation(); window.location.href = "tel:" + ct.phone.replace(/[^0-9+]/g, ""); },
+      style: { flex: 1, padding: "8px", borderRadius: 8, border: T.border, background: T.orange, color: "#fff", fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+    }, "CALL"), /*#__PURE__*/React.createElement("button", {
+      onClick: function(e) {
+        e.stopPropagation();
+        var _ct = ct;
+        showModal({
+          title: "Email " + _ct.name,
+          message: _ct.email || "No email on file",
+          input: true,
+          inputLabel: "MESSAGE",
+          inputPlaceholder: "Type your message...",
+          confirmLabel: "SEND",
+          confirmColor: T.orange,
+          confirmTextColor: "#fff",
+          cancelLabel: "CANCEL"
+        }).then(function(val) {
+          if (val) window.location.href = "mailto:" + (_ct.email || "") + "?body=" + encodeURIComponent(val);
+        });
+      },
+      style: { flex: 1, padding: "8px", borderRadius: 8, border: T.border, background: T.white, color: T.black, fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+    }, "EMAIL"), /*#__PURE__*/React.createElement("button", {
+      onClick: function(e) { e.stopPropagation(); editClickedRef.current = true; setEditingContact({ key: ctKey, name: ct.name, role: ct.role, phone: ct.phone, email: ct.email || "" }); },
+      style: { flex: 1, padding: "8px", borderRadius: 8, border: T.border, background: T.cream, color: T.black, fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+    }, "EDIT"))
+  ),
+  /* Edit form */
+  isEditing && /*#__PURE__*/React.createElement("div", {
+    onClick: function(e) { e.stopPropagation(); },
+    onKeyDown: function(e) { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); ct.name = editingContact.name; ct.role = editingContact.role; ct.phone = editingContact.phone; ct.email = editingContact.email; setEditingContact(null); setSelectedContact(null); } },
+    style: { display: "flex", flexDirection: "column", gap: 8 }
+  },
+    /*#__PURE__*/React.createElement("div", {
+      style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 700, letterSpacing: 1, color: T.black, opacity: 0.4, marginBottom: 2 }
+    }, "EDIT CONTACT"),
+    /* Name field */
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {
+        style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4, display: "block", marginBottom: 3 }
+      }, "NAME"),
+      /*#__PURE__*/React.createElement("input", {
+        value: editingContact.name,
+        onClick: function(e) { e.stopPropagation(); },
+        onChange: function(e) { setEditingContact(Object.assign({}, editingContact, { name: e.target.value })); },
+        style: { width: "100%", padding: "8px 10px", borderRadius: 6, border: T.border, background: T.white, color: T.black, fontFamily: T.fontMono, fontSize: 12, fontWeight: 600, outline: "none", boxSizing: "border-box" }
+      })
+    ),
+    /* Role field */
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {
+        style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4, display: "block", marginBottom: 3 }
+      }, "ROLE"),
+      /*#__PURE__*/React.createElement("input", {
+        value: editingContact.role,
+        onClick: function(e) { e.stopPropagation(); },
+        onChange: function(e) { setEditingContact(Object.assign({}, editingContact, { role: e.target.value })); },
+        style: { width: "100%", padding: "8px 10px", borderRadius: 6, border: T.border, background: T.white, color: T.black, fontFamily: T.fontMono, fontSize: 12, fontWeight: 500, outline: "none", boxSizing: "border-box" }
+      })
+    ),
+    /* Phone field */
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {
+        style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4, display: "block", marginBottom: 3 }
+      }, "PHONE"),
+      /*#__PURE__*/React.createElement("input", {
+        value: editingContact.phone,
+        type: "tel",
+        onClick: function(e) { e.stopPropagation(); },
+        onChange: function(e) { setEditingContact(Object.assign({}, editingContact, { phone: e.target.value })); },
+        style: { width: "100%", padding: "8px 10px", borderRadius: 6, border: T.border, background: T.white, color: T.black, fontFamily: T.fontMono, fontSize: 12, fontWeight: 500, outline: "none", boxSizing: "border-box" }
+      })
+    ),
+    /* Email field */
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {
+        style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4, display: "block", marginBottom: 3 }
+      }, "EMAIL"),
+      /*#__PURE__*/React.createElement("input", {
+        value: editingContact.email,
+        type: "email",
+        onClick: function(e) { e.stopPropagation(); },
+        onChange: function(e) { setEditingContact(Object.assign({}, editingContact, { email: e.target.value })); },
+        style: { width: "100%", padding: "8px 10px", borderRadius: 6, border: T.border, background: T.white, color: T.black, fontFamily: T.fontMono, fontSize: 12, fontWeight: 500, outline: "none", boxSizing: "border-box" }
+      })
+    ),
+    /* Save / Cancel buttons */
+    /*#__PURE__*/React.createElement("div", {
+      style: { display: "flex", gap: 6, marginTop: 4 }
+    },
+      /*#__PURE__*/React.createElement("button", {
+        onClick: function(e) {
+          e.stopPropagation();
+          ct.name = editingContact.name;
+          ct.role = editingContact.role;
+          ct.phone = editingContact.phone;
+          ct.email = editingContact.email;
+          setEditingContact(null);
+          setSelectedContact(null);
+        },
+        style: { flex: 1, padding: "10px", borderRadius: 8, border: "none", background: T.black, color: T.white, fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+      }, "SAVE"),
+      /*#__PURE__*/React.createElement("button", {
+        onClick: function(e) { e.stopPropagation(); setEditingContact(null); },
+        style: { flex: 1, padding: "10px", borderRadius: 8, border: T.border, background: T.white, color: T.black, fontFamily: T.fontMono, fontSize: 10, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }
+      }, "CANCEL")
+    )
+  )); })), showProducts === c.name && /*#__PURE__*/React.createElement("div", {
+    style: { marginTop: 10 }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: { display: "flex", justifyContent: "space-between", padding: "4px 0", marginBottom: 4 }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4 }
+  }, "PRODUCT"), /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontMono, fontSize: 8, fontWeight: 600, letterSpacing: 1, color: T.black, opacity: 0.4 }
+  }, "PRICE")), c.products.map((p, pi) => /*#__PURE__*/React.createElement("div", {
+    key: pi,
+    style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 8px", background: T.white, border: T.borderThin, borderRadius: 6, marginBottom: 4 }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontMono, fontSize: 11, fontWeight: 500, color: T.black }
+  }, p.name), /*#__PURE__*/React.createElement("span", {
+    style: { fontFamily: T.fontMono, fontSize: 12, fontWeight: 700, color: T.black }
+  }, p.price)))))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 20
+    }
+  }));
+}
+
+// MAIN APP
+function App() {
+  const validTabs = ["home", "actions", "accounts"];
+  const hashTab = window.location.hash.replace("#", "");
+  const initTab = validTabs.includes(hashTab) ? hashTab : "home";
+  const [activeTab, setActiveTab] = useState(initTab);
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    window.location.hash = tab;
+  };
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HeaderBar, null), activeTab === "home" && /*#__PURE__*/React.createElement(HomeTab, null), activeTab === "actions" && /*#__PURE__*/React.createElement(ActionsTab, null), activeTab === "accounts" && /*#__PURE__*/React.createElement(AccountsTab, null), /*#__PURE__*/React.createElement(TabBar, {
+    activeTab: activeTab,
+    onTabChange: handleTabChange
+  }), /*#__PURE__*/React.createElement(AppModal, null));
+}
+ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
+</script>
+</body>
+</html>

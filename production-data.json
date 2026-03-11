@@ -1,0 +1,3660 @@
+{
+  "bonusRates": {
+    "blueStackRepaired": 14,
+    "bundle": 25,
+    "bundleSat": 30,
+    "driverHourly": 28,
+    "stackRepaired": 10
+  },
+  "employeeDefaults": {
+    "adalid-torres": {
+      "hrsPayroll": 27
+    },
+    "angie-martinez": {
+      "hrsPayroll": 20
+    },
+    "carlos": {
+      "hrsPayroll": 20
+    },
+    "daniel-hernandez": {
+      "hrsPayroll": 40
+    },
+    "hector": {
+      "hrsPayroll": 30
+    },
+    "jose-agustin-amaya": {
+      "hrsPayroll": 20
+    },
+    "leonides": {
+      "hrsPayroll": 40
+    },
+    "melvin": {
+      "hrsPayroll": 20
+    },
+    "nick": {
+      "hrsPayroll": 40
+    },
+    "teodoro-portillo": {
+      "hrsPayroll": 40
+    },
+    "tito-estrada": {
+      "hrsPayroll": 40
+    }
+  },
+  "employees": [
+    {
+      "dailyRate": 160,
+      "id": "angie-martinez",
+      "name": "ANGIE MARTINEZ",
+      "payInfo": "Daily - $160",
+      "type": "salaried",
+      "weeklyRate": 400
+    },
+    {
+      "dailyRate": 200,
+      "id": "jose-agustin-amaya",
+      "name": "JOSE AGUSTIN AMAYA",
+      "payInfo": "Daily - $200",
+      "type": "salaried",
+      "weeklyRate": 450
+    },
+    {
+      "dailyRate": 180,
+      "id": "teodoro-portillo",
+      "name": "TEODORO PORTILLO",
+      "payInfo": "Daily - $180",
+      "type": "salaried",
+      "weeklyRate": 700
+    },
+    {
+      "dailyRate": 160,
+      "id": "daniel-hernandez",
+      "name": "DANIEL HERNANDEZ",
+      "payInfo": "Daily - $160",
+      "type": "salaried",
+      "weeklyRate": 800
+    },
+    {
+      "dailyRate": 200,
+      "id": "jose-huezo",
+      "name": "JOSE HUEZO",
+      "payInfo": "Daily - $200",
+      "type": "salaried"
+    },
+    {
+      "dailyRate": 170,
+      "id": "hector",
+      "name": "HECTOR",
+      "payInfo": "Daily - $170",
+      "type": "salaried",
+      "weeklyRate": 510
+    },
+    {
+      "id": "kilmer",
+      "name": "KILMER",
+      "payInfo": "Manufacture",
+      "subtype": "builder",
+      "type": "piece"
+    },
+    {
+      "id": "leonides",
+      "name": "LEONIDES",
+      "payInfo": "Manufacture",
+      "subtype": "builder",
+      "type": "piece",
+      "weeklyRate": 640
+    },
+    {
+      "id": "tingo",
+      "name": "TINGO",
+      "payInfo": "Repair",
+      "subtype": "repairman-blue",
+      "type": "piece"
+    },
+    {
+      "id": "henry-sanchez",
+      "name": "HENRY SANCHEZ",
+      "payInfo": "Repair",
+      "subtype": "repairman",
+      "type": "piece"
+    },
+    {
+      "id": "antonio",
+      "name": "ANTONIO",
+      "payInfo": "Repair",
+      "subtype": "repairman",
+      "type": "piece"
+    },
+    {
+      "id": "wilbur",
+      "name": "WILBUR",
+      "payInfo": "Repair",
+      "subtype": "repairman",
+      "type": "piece"
+    },
+    {
+      "id": "carlos",
+      "name": "CARLOS",
+      "payInfo": "Repair",
+      "subtype": "repairman",
+      "type": "piece",
+      "weeklyRate": 400
+    },
+    {
+      "id": "heriberto",
+      "name": "HERIBERTO",
+      "payInfo": "Repair",
+      "subtype": "repairman",
+      "type": "piece"
+    },
+    {
+      "id": "fidel",
+      "name": "FIDEL",
+      "payInfo": null,
+      "subtype": "repairman",
+      "type": "piece"
+    },
+    {
+      "id": "nelson",
+      "name": "NELSON",
+      "payInfo": "Dismantle",
+      "subtype": "bundler",
+      "type": "piece"
+    },
+    {
+      "id": "melvin",
+      "name": "MELVIN",
+      "payInfo": "Dismantle",
+      "subtype": "bundler",
+      "type": "piece",
+      "weeklyRate": 400
+    },
+    {
+      "id": "milton",
+      "name": "MILTON",
+      "payInfo": "Dismantle",
+      "subtype": "bundler",
+      "type": "piece"
+    },
+    {
+      "hourlyRate": 28,
+      "id": "adalid-torres",
+      "name": "ADALID TORRES",
+      "payInfo": "Hourly - $28",
+      "type": "driver",
+      "weeklyRate": 594
+    },
+    {
+      "id": "tito-estrada",
+      "name": "TITO",
+      "payInfo": "Hourly - $28",
+      "type": "driver",
+      "weeklyRate": 1120
+    },
+    {
+      "id": "nick",
+      "name": "NICK",
+      "payInfo": "Hourly - $28",
+      "type": "driver",
+      "weeklyRate": 1120
+    }
+  ],
+  "pieceRates": {
+    "102x40": 2,
+    "24x24": 0.6,
+    "30x30": 0.6,
+    "36x36": 0.6,
+    "36x42": 0.75,
+    "40x40 D/R": 0.9,
+    "41x41 D/R": 0.9,
+    "42x42": 0.75,
+    "42x42 3P": 0.85,
+    "42x42 D/R": 0.9,
+    "42x42 Ext": 0.75,
+    "42x42 Rem": 0.5,
+    "44x44": 0.75,
+    "44x44 D/R": 0.9,
+    "45x45": 0.75,
+    "48x32": 0.75,
+    "48x40": 1,
+    "48x40 Anadia": 1.1,
+    "48x42": 1,
+    "48x44 FT": 1.25,
+    "48x48": 1,
+    "48x48 D/R": 1.5,
+    "51x42": 1,
+    "56x44": 1,
+    "56x44 FT": 1.5,
+    "60x36": 1,
+    "62x42": 1,
+    "74x42": 1.5,
+    "96x36": 1.5
+  },
+  "weeks": {
+    "2026-01-29": {
+      "dates": [
+        "2026-01-29",
+        "2026-01-30",
+        "2026-01-31",
+        "2026-02-02",
+        "2026-02-03",
+        "2026-02-04"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 27,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 30,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "1/29 - 2/4"
+    },
+    "2026-02-05": {
+      "dates": [
+        "2026-02-05",
+        "2026-02-06",
+        "2026-02-07",
+        "2026-02-09",
+        "2026-02-10",
+        "2026-02-11"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 27,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 30,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "2/5 - 2/11"
+    },
+    "2026-02-12": {
+      "dates": [
+        "2026-02-12",
+        "2026-02-13",
+        "2026-02-14",
+        "2026-02-16",
+        "2026-02-17",
+        "2026-02-18"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 27,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 30,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "2/12 - 2/18"
+    },
+    "2026-02-19": {
+      "dates": [
+        "2026-02-19",
+        "2026-02-20",
+        "2026-02-21",
+        "2026-02-23",
+        "2026-02-24",
+        "2026-02-25"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 27,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 30,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "2/19 - 2/25"
+    },
+    "2026-02-26": {
+      "dates": [
+        "2026-02-26",
+        "2026-02-27",
+        "2026-02-28",
+        "2026-03-02",
+        "2026-03-03",
+        "2026-03-04"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 27,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": true,
+            "mon": true,
+            "sat": false,
+            "thu": true,
+            "tue": true,
+            "wed": true
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 800,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": true,
+            "mon": true,
+            "sat": false,
+            "thu": true,
+            "tue": true,
+            "wed": true
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 800,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": true,
+            "mon": true,
+            "sat": true,
+            "thu": true,
+            "tue": true,
+            "wed": true
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 30,
+          "notes": "",
+          "total": 1020,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": true,
+            "mon": false,
+            "sat": true,
+            "thu": true,
+            "tue": true,
+            "wed": true
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 1000,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": true,
+            "mon": true,
+            "sat": false,
+            "thu": true,
+            "tue": true,
+            "wed": true
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 1000,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": true,
+            "mon": true,
+            "sat": false,
+            "thu": true,
+            "tue": true,
+            "wed": true
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 900,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsWorked": 2,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "2/26 - 3/4"
+    },
+    "2026-03-05": {
+      "dates": [
+        "2026-03-05",
+        "2026-03-06",
+        "2026-03-07",
+        "2026-03-09",
+        "2026-03-10",
+        "2026-03-11"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": {
+              "in": "06:15",
+              "out": "15:45"
+            },
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 27,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": true,
+            "mon": true,
+            "sat": false,
+            "thu": true,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 480,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": true,
+            "mon": false,
+            "sat": false,
+            "thu": true,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 320,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": true,
+            "mon": false,
+            "sat": false,
+            "thu": true,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 30,
+          "notes": "",
+          "total": 340,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": true,
+            "mon": true,
+            "sat": true,
+            "thu": true,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 800,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": true,
+            "mon": false,
+            "sat": false,
+            "thu": true,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 400,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [
+              {
+                "qty": 8,
+                "type": "48x40 Anadia"
+              }
+            ],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 176,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [
+              {
+                "qty": 5,
+                "type": "102x40"
+              }
+            ],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 200,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [
+              {
+                "qty": 6,
+                "type": "Bundle"
+              }
+            ],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 150,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [
+              {
+                "qty": 6,
+                "type": "Bundle (Sat)"
+              }
+            ],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 180,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": true,
+            "mon": true,
+            "sat": false,
+            "thu": true,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 540,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [
+              {
+                "qty": 12,
+                "type": "48x40 Repair"
+              }
+            ],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 120,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "3/5 - 3/11"
+    },
+    "2026-03-06": {
+      "dates": [
+        "2026-03-06",
+        "2026-03-07",
+        "2026-03-08",
+        "2026-03-10",
+        "2026-03-11",
+        "2026-03-12"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "3/6 - 3/12"
+    },
+    "2026-03-12": {
+      "dates": [
+        "2026-03-12",
+        "2026-03-13",
+        "2026-03-14",
+        "2026-03-16",
+        "2026-03-17",
+        "2026-03-18"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 27,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 30,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 20,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 40,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "3/12 - 3/18"
+    },
+    "2026-03-19": {
+      "dates": [
+        "2026-03-19",
+        "2026-03-20",
+        "2026-03-21",
+        "2026-03-23",
+        "2026-03-24",
+        "2026-03-25"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "3/19 - 3/25"
+    },
+    "2026-03-26": {
+      "dates": [
+        "2026-03-26",
+        "2026-03-27",
+        "2026-03-28",
+        "2026-03-30",
+        "2026-03-31",
+        "2026-04-01"
+      ],
+      "entries": {
+        "adalid-torres": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "angie-martinez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "antonio": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "carlos": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "daniel-hernandez": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "fidel": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "hector": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "henry-sanchez": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "heriberto": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-agustin-amaya": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "jose-huezo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "kilmer": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "leonides": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "melvin": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "milton": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nelson": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "nick": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "teodoro-portillo": {
+          "days": {
+            "fri": false,
+            "mon": false,
+            "sat": false,
+            "thu": false,
+            "tue": false,
+            "wed": false
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tingo": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "tito-estrada": {
+          "days": {
+            "fri": null,
+            "mon": null,
+            "sat": null,
+            "thu": null,
+            "tue": null,
+            "wed": null
+          },
+          "debit": 0,
+          "deductions": 0,
+          "hrsPayroll": 0,
+          "hrsWorked": null,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        },
+        "wilbur": {
+          "days": {
+            "fri": [],
+            "mon": [],
+            "sat": [],
+            "thu": [],
+            "tue": [],
+            "wed": []
+          },
+          "debit": 0,
+          "deductions": 0,
+          "notes": "",
+          "total": 0,
+          "totalOverride": null
+        }
+      },
+      "label": "3/26 - 4/1"
+    }
+  }
+}

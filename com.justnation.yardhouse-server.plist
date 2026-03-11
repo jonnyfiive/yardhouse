@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Just Nation — Yardhouse Dashboard Server -->
+    <!-- Auto-starts on login, auto-restarts on crash -->
+
+    <key>Label</key>
+    <string>com.justnation.yardhouse-server</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>dashboard_server.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/jonathancrespo/Claude/Work/Projects/Pallet Operations/Yardhouse</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+
+    <!-- Start automatically when user logs in -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Auto-restart if it crashes, up to 10 times per 60 seconds -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <!-- Logs — check these if something seems off -->
+    <key>StandardOutPath</key>
+    <string>/Users/jonathancrespo/Claude/Work/Projects/Pallet Operations/Yardhouse/logs/server.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/jonathancrespo/Claude/Work/Projects/Pallet Operations/Yardhouse/logs/server-error.log</string>
+</dict>
+</plist>
