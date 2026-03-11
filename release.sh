@@ -43,7 +43,7 @@ npm run release
 echo ""
 echo "=== Released Yardhouse v$NEW ==="
 echo "  DMG: release/Yardhouse-$NEW-arm64.dmg"
-echo "  GitHub: https://github.com/justnationllc/yardhouse/releases/tag/v$NEW"
+echo "  GitHub: https://github.com/jonnyfiive/yardhouse/releases/tag/v$NEW"
 echo ""
 echo "  All machines will auto-update on next launch."
 echo ""

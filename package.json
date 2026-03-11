@@ -1,6 +1,6 @@
 {
   "name": "yardhouse",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Yardhouse — Just Nation Operations",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -17,11 +17,14 @@
     "productName": "Yardhouse",
     "publish": {
       "provider": "github",
-      "owner": "justnationllc",
+      "owner": "jonnyfiive",
       "repo": "yardhouse"
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "public/icon.icns",
       "identity": null
     },
