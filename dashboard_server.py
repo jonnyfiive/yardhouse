@@ -1406,12 +1406,21 @@ def _load_production_config():
 
 
 def _notion_query_production(week_start):
-    """Query Notion for all production entries for a given week."""
+    """Query Notion for all production entries for a given week.
+    Returns list of pages on success (may be empty).
+    Raises RuntimeError if the Notion API returns a non-200 status.
+    """
     filter_obj = {
         "property": "Week",
         "date": {"equals": week_start}
     }
-    return notion_query(PRODUCTION_DB, filter_obj=filter_obj, page_size=100)
+    url = f"{NOTION_BASE}/databases/{PRODUCTION_DB}/query"
+    payload = {"page_size": 100, "filter": filter_obj}
+    resp = requests.post(url, headers=HEADERS, json=payload)
+    if resp.status_code != 200:
+        raise RuntimeError(f"Notion API {resp.status_code}: {resp.text[:200]}")
+    data = resp.json()
+    return data.get("results", [])
 
 
 def _parse_day_value(text):
