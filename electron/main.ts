@@ -77,6 +77,7 @@ function syncServerFiles(): void {
     'email_poll_state.json',
     '.qbo_tokens.json',
     'production-data.json',
+    'receipt-number.json',
   ]
 
   for (const file of alwaysSyncFiles) {

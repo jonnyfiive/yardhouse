@@ -1,6 +1,6 @@
 {
   "name": "yardhouse",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Yardhouse — Just Nation Operations",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -71,6 +71,10 @@
       {
         "from": "production-data.json",
         "to": "server/production-data.json"
+      },
+      {
+        "from": "receipt-number.json",
+        "to": "server/receipt-number.json"
       }
     ]
   },

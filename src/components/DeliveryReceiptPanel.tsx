@@ -6,17 +6,17 @@ interface DeliveryReceiptPanelProps {
   onClose: () => void
 }
 
-const STORAGE_KEY = 'jn-last-invoice-number'
+const STORAGE_KEY = 'jn-last-receipt-number'
 
-const STARTING_INVOICE = 29640
+const STARTING_RECEIPT = 29640
 
-function getNextInvoice(): string {
+function getNextReceiptLocal(): string {
   const last = localStorage.getItem(STORAGE_KEY)
   if (last) {
     const num = parseInt(last, 10)
-    return isNaN(num) ? String(STARTING_INVOICE) : String(num + 1)
+    return isNaN(num) ? String(STARTING_RECEIPT) : String(num + 1)
   }
-  return String(STARTING_INVOICE)
+  return String(STARTING_RECEIPT)
 }
 
 function todayString(): string {
@@ -34,6 +34,8 @@ function stripCompanyPrefix(productName: string): string {
   return dashIdx !== -1 ? productName.substring(dashIdx + 3) : productName
 }
 
+const API_BASE = 'http://localhost:5050'
+
 export default function DeliveryReceiptPanel({ onClose }: DeliveryReceiptPanelProps) {
   const { fetchCustomers } = useApi()
 
@@ -44,8 +46,21 @@ export default function DeliveryReceiptPanel({ onClose }: DeliveryReceiptPanelPr
   const [highlightedIndex, setHighlightedIndex] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const [invoiceNumber, setInvoiceNumber] = useState(getNextInvoice)
+  const [receiptNumber, setReceiptNumber] = useState('')
   const [date, setDate] = useState(todayString)
+
+  // Fetch next receipt number from server (synced across machines)
+  useEffect(() => {
+    fetch(`${API_BASE}/api/receipt-number/next`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.next) setReceiptNumber(String(data.next))
+      })
+      .catch(() => {
+        // Fallback to local storage if server unavailable
+        setReceiptNumber(getNextReceiptLocal())
+      })
+  }, [])
   const [shipVia, setShipVia] = useState('JN')
   const [purchaseOrder, setPurchaseOrder] = useState('')
   const [trailerNo, setTrailerNo] = useState('')
@@ -173,18 +188,35 @@ export default function DeliveryReceiptPanel({ onClose }: DeliveryReceiptPanelPr
 
   const total = lineItems.reduce((sum, li) => sum + li.amount, 0)
 
+  // Commit receipt number to server (marks it as used)
+  const commitReceiptNumber = (num: string) => {
+    localStorage.setItem(STORAGE_KEY, num)
+    fetch(`${API_BASE}/api/receipt-number/commit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ number: parseInt(num, 10) }),
+    }).catch(() => {})
+  }
+
   const handlePrint = () => {
-    if (invoiceNumber) {
-      localStorage.setItem(STORAGE_KEY, invoiceNumber)
+    if (receiptNumber) {
+      commitReceiptNumber(receiptNumber)
     }
     window.print()
   }
 
   const handleNewReceipt = () => {
-    if (invoiceNumber) {
-      localStorage.setItem(STORAGE_KEY, invoiceNumber)
+    if (receiptNumber) {
+      commitReceiptNumber(receiptNumber)
     }
-    setInvoiceNumber(getNextInvoice())
+    // Fetch next from server
+    fetch(`${API_BASE}/api/receipt-number/next`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.next) setReceiptNumber(String(data.next))
+        else setReceiptNumber(getNextReceiptLocal())
+      })
+      .catch(() => setReceiptNumber(getNextReceiptLocal()))
     setDate(todayString())
     setShipVia('JN')
     setPurchaseOrder('')
@@ -272,12 +304,12 @@ export default function DeliveryReceiptPanel({ onClose }: DeliveryReceiptPanelPr
             <div className="receipt-title">DELIVERY RECEIPT</div>
             <input
               className="receipt-input receipt-invoice-input"
-              value={invoiceNumber ? `Invoice: ${invoiceNumber}` : ''}
+              value={receiptNumber ? `Receipt: ${receiptNumber}` : ''}
               onChange={e => {
-                const raw = e.target.value.replace(/^Invoice:\s*/, '')
-                setInvoiceNumber(raw)
+                const raw = e.target.value.replace(/^Receipt:\s*/, '')
+                setReceiptNumber(raw)
               }}
-              placeholder="Invoice: #"
+              placeholder="Receipt: #"
             />
           </div>
         </div>

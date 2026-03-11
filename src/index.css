@@ -2208,6 +2208,7 @@ body.dark-mode .receipt-btn-print {
 .receipt-items-body {
   min-height: 160px;
   display: flex;
+  flex-direction: column;
   position: relative;
 }
 

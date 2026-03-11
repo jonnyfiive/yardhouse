@@ -1817,6 +1817,111 @@ def delete_task(task_id):
 
 
 # ============================================================================
+# Receipt Number (synced across machines via local file + Notion fallback)
+# ============================================================================
+
+RECEIPT_NUMBER_PATH = Path(__file__).parent / "receipt-number.json"
+STARTING_RECEIPT_NUMBER = 29640
+
+
+def _load_receipt_number():
+    """Load the last used receipt number from local file."""
+    try:
+        with open(RECEIPT_NUMBER_PATH) as f:
+            data = json.load(f)
+        return data.get("lastUsed", STARTING_RECEIPT_NUMBER)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return STARTING_RECEIPT_NUMBER
+
+
+def _save_receipt_number(num):
+    """Save the last used receipt number to local file."""
+    with open(RECEIPT_NUMBER_PATH, "w") as f:
+        json.dump({"lastUsed": num}, f)
+
+
+# Notion page for syncing receipt number across machines
+# We'll use a simple page in the Companies DB (or a dedicated page)
+RECEIPT_COUNTER_PAGE_ID = None  # Will be discovered/created on first use
+
+
+def _get_receipt_counter_from_notion():
+    """Fetch the receipt counter from Notion (stored as a page in a known location)."""
+    if not NOTION_TOKEN:
+        return None
+    try:
+        # Search for a page titled "__receipt_counter__" in the Production DB
+        filter_obj = {"property": "Employee", "title": {"equals": "__receipt_counter__"}}
+        pages = notion_query(PRODUCTION_DB, filter_obj=filter_obj, page_size=1)
+        if pages:
+            page = pages[0]
+            # Store the counter in the "Total" number field
+            val = get_property_value(page, "Total")
+            return {"page_id": page["id"], "lastUsed": int(val) if val else STARTING_RECEIPT_NUMBER}
+    except Exception:
+        pass
+    return None
+
+
+def _save_receipt_counter_to_notion(num):
+    """Save the receipt counter to Notion."""
+    if not NOTION_TOKEN:
+        return
+    try:
+        counter = _get_receipt_counter_from_notion()
+        props = {
+            "Employee": {"title": [{"text": {"content": "__receipt_counter__"}}]},
+            "Total": {"number": num},
+        }
+        if counter and counter.get("page_id"):
+            # Update existing
+            url = f"{NOTION_BASE}/pages/{counter['page_id']}"
+            requests.patch(url, headers=HEADERS, json={"properties": props})
+        else:
+            # Create new
+            url = f"{NOTION_BASE}/pages"
+            payload = {"parent": {"database_id": PRODUCTION_DB}, "properties": props}
+            requests.post(url, headers=HEADERS, json=payload)
+    except Exception:
+        pass
+
+
+@app.route("/api/receipt-number/next", methods=["GET"])
+def get_next_receipt_number():
+    """Get the next receipt number, synced across machines."""
+    # Try Notion first (authoritative source)
+    notion_counter = _get_receipt_counter_from_notion()
+    local_num = _load_receipt_number()
+
+    if notion_counter and notion_counter.get("lastUsed"):
+        # Use the highest of local and Notion to avoid collisions
+        best = max(notion_counter["lastUsed"], local_num)
+    else:
+        best = local_num
+
+    return jsonify({"next": best + 1, "lastUsed": best})
+
+
+@app.route("/api/receipt-number/commit", methods=["POST"])
+def commit_receipt_number():
+    """Mark a receipt number as used (after print or new receipt)."""
+    data = request.json or {}
+    num = data.get("number")
+    if not num or not isinstance(num, (int, float)):
+        return jsonify({"error": "Invalid number"}), 400
+
+    num = int(num)
+
+    # Save locally
+    _save_receipt_number(num)
+
+    # Save to Notion for cross-machine sync
+    _save_receipt_counter_to_notion(num)
+
+    return jsonify({"ok": True, "lastUsed": num})
+
+
+# ============================================================================
 # Main
 # ============================================================================
 
