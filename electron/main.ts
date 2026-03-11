@@ -471,11 +471,11 @@ function buildAppMenu(): void {
                   buttons: ['OK'],
                 })
               }
-            }).catch(() => {
+            }).catch((err) => {
               dialog.showMessageBox({
                 type: 'warning',
                 title: 'Update Check Failed',
-                message: 'Could not check for updates. Please check your internet connection.',
+                message: `Could not check for updates.\n\n${err?.message || err}`,
                 buttons: ['OK'],
               })
             })

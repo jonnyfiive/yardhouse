@@ -40,6 +40,11 @@ export GH_TOKEN
 # Build + publish
 npm run release
 
+# electron-builder creates drafts — publish them so auto-updater can see them
+echo ""
+echo "Publishing release v$NEW..."
+gh release edit "v$NEW" --repo jonnyfiive/yardhouse --draft=false 2>/dev/null || true
+
 echo ""
 echo "=== Released Yardhouse v$NEW ==="
 echo "  DMG: release/Yardhouse-$NEW-arm64.dmg"
