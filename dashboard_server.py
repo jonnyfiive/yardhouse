@@ -1500,37 +1500,54 @@ def get_production():
     # Get requested week (default: current week start)
     week_param = request.args.get("week")
 
-    # Build the weeks dict — fetch from Notion for requested weeks
+    # Build the weeks dict — always fetch from Notion
     weeks = {}
     if week_param:
         week_keys = [week_param]
     else:
-        # Return current + recent weeks for the UI
-        # The UI sends specific week keys, so default to returning empty weeks dict
-        # The UI will request specific weeks as needed
-        week_keys = []
+        # Calculate current Thursday-start week (matching frontend logic)
+        from datetime import date, timedelta
+        today = date.today()
+        day_of_week = today.weekday()  # Mon=0, Thu=3
+        # Thu=3. If day < 3, go back to previous Thu. If day >= 3, use this Thu.
+        if day_of_week >= 3:  # Thu-Sun
+            diff = day_of_week - 3
+        else:  # Mon-Wed
+            diff = day_of_week + 4
+        current_thu = today - timedelta(days=diff)
+        prev_thu = current_thu - timedelta(days=7)
+        week_keys = [prev_thu.isoformat(), current_thu.isoformat()]
 
-        # Also load any weeks from local cache for backward compat
+        # Load local cache as fallback for weeks not in Notion yet
         try:
             with open(PRODUCTION_PATH) as f:
                 local_data = json.load(f)
             local_weeks = local_data.get("weeks", {})
-            # Only use local weeks that we haven't migrated yet
             weeks.update(local_weeks)
         except (FileNotFoundError, json.JSONDecodeError):
             pass
+
+    # Build employee type lookup for normalizing day values
+    employees = config.get("employees", [])
+    emp_types = {e["id"]: e.get("type", "piece") for e in employees}
 
     for wk in week_keys:
         pages = _notion_query_production(wk)
         if pages:
             entries = {}
-            dates_set = set()
             for page in pages:
                 emp_id = get_property_value(page, "Employee")
                 if emp_id:
-                    entries[emp_id] = _notion_row_to_entry(page)
-                    # Try to extract week dates from a page property
-                    week_date = get_property_value(page, "Week")
+                    entry = _notion_row_to_entry(page)
+                    # Normalize None day values based on employee type
+                    etype = emp_types.get(emp_id, "piece")
+                    for dk in DAY_KEYS:
+                        if entry["days"].get(dk) is None:
+                            if etype == "salaried":
+                                entry["days"][dk] = False
+                            elif etype == "piece":
+                                entry["days"][dk] = []
+                    entries[emp_id] = entry
             weeks[wk] = {
                 "entries": entries,
                 "dates": weeks.get(wk, {}).get("dates", []),
@@ -1573,9 +1590,16 @@ def save_production():
     os.replace(tmp_path, str(PRODUCTION_PATH))
 
     # Sync weekly entries to Notion
+    # If a specific changedWeek is given, only sync that one (fast path)
+    changed_week = data.get("changedWeek")
     weeks = data.get("weeks", {})
+    if changed_week and changed_week in weeks:
+        weeks_to_sync = {changed_week: weeks[changed_week]}
+    else:
+        weeks_to_sync = weeks
+
     errors = []
-    for week_start, week_data in weeks.items():
+    for week_start, week_data in weeks_to_sync.items():
         entries = week_data.get("entries", {})
         if not entries:
             continue

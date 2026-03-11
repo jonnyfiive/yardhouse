@@ -155,22 +155,25 @@ export function useProduction() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  const debouncedSave = useCallback((newData: ProductionData) => {
+  const debouncedSave = useCallback((newData: ProductionData, weekKey?: string) => {
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
+      const payload: any = { ...newData }
+      // Tell the server which week changed so it only syncs that one to Notion
+      if (weekKey) payload.changedWeek = weekKey
       fetch(`${API_BASE}/api/production`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newData),
+        body: JSON.stringify(payload),
       }).catch(console.error)
     }, 500)
   }, [])
 
-  const updateData = useCallback((updater: (prev: ProductionData) => ProductionData) => {
+  const updateData = useCallback((updater: (prev: ProductionData) => ProductionData, weekKey?: string) => {
     setData(prev => {
       if (!prev) return prev
       const next = updater(prev)
-      debouncedSave(next)
+      debouncedSave(next, weekKey)
       return next
     })
   }, [debouncedSave])
@@ -217,7 +220,7 @@ export function useProduction() {
         const withWeek = ensureWeek(newKey, data)
         if (withWeek !== data) {
           setData(withWeek)
-          debouncedSave(withWeek)
+          debouncedSave(withWeek, newKey)
         }
       }
       return newKey
@@ -237,7 +240,7 @@ export function useProduction() {
       if (emp) entry.total = calculateTotal(emp, entry, prev.pieceRates, prev.bonusRates)
       week.entries = { ...week.entries, [employeeId]: entry }
       return { ...withWeek, weeks: { ...withWeek.weeks, [currentWeekKey]: week } }
-    })
+    }, currentWeekKey)
   }, [currentWeekKey, ensureWeek, updateData])
 
   const updateEntryField = useCallback((
@@ -262,7 +265,7 @@ export function useProduction() {
       }
 
       return result
-    })
+    }, currentWeekKey)
   }, [currentWeekKey, ensureWeek, updateData])
 
   const addEmployee = useCallback((employee: Employee) => {
@@ -312,7 +315,7 @@ export function useProduction() {
     const withWeek = ensureWeek(currentWeekKey, data)
     if (withWeek !== data) {
       setData(withWeek)
-      debouncedSave(withWeek)
+      debouncedSave(withWeek, currentWeekKey)
     }
     return withWeek.weeks[currentWeekKey] || null
   }, [data, currentWeekKey, ensureWeek, debouncedSave])
