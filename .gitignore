@@ -6,3 +6,5 @@ release/
 .env
 *.dmg
 *.blockmap
+logs/
+*.log

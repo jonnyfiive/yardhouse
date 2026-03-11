@@ -1,6 +1,6 @@
 {
   "name": "yardhouse",
-  "version": "1.0.7",
+  "version": "1.0.10",
   "description": "Yardhouse — Just Nation Operations",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -26,7 +26,11 @@
         "zip"
       ],
       "icon": "public/icon.icns",
-      "identity": null
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "electron/entitlements.mac.plist",
+      "entitlementsInherit": "electron/entitlements.mac.inherit.plist",
+      "notarize": true
     },
     "directories": {
       "output": "release"

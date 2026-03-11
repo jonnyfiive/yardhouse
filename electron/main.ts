@@ -551,12 +551,12 @@ function setupAutoUpdater(): void {
       type: 'info',
       title: 'Update Ready',
       message: `Yardhouse v${info.version} is ready to install.`,
-      detail: 'The update will be applied when you restart the app.',
+      detail: 'Click Restart Now to update.',
       buttons: ['Restart Now', 'Later'],
       defaultId: 0,
     }).then((result) => {
       if (result.response === 0) {
-        autoUpdater.quitAndInstall()
+        autoUpdater.quitAndInstall(false, true)
       }
     })
   })
