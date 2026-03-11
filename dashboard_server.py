@@ -1500,7 +1500,7 @@ def get_production():
     # Get requested week (default: current week start)
     week_param = request.args.get("week")
 
-    # Build the weeks dict — always fetch from Notion
+    # Build the weeks dict — Notion is the single source of truth
     weeks = {}
     if week_param:
         week_keys = [week_param]
@@ -1518,42 +1518,50 @@ def get_production():
         prev_thu = current_thu - timedelta(days=7)
         week_keys = [prev_thu.isoformat(), current_thu.isoformat()]
 
-        # Load local cache as fallback for weeks not in Notion yet
-        try:
-            with open(PRODUCTION_PATH) as f:
-                local_data = json.load(f)
-            local_weeks = local_data.get("weeks", {})
-            weeks.update(local_weeks)
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
+    # Load local cache ONLY as fallback if Notion API fails
+    local_weeks = {}
+    try:
+        with open(PRODUCTION_PATH) as f:
+            local_data = json.load(f)
+        local_weeks = local_data.get("weeks", {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
 
     # Build employee type lookup for normalizing day values
     employees = config.get("employees", [])
     emp_types = {e["id"]: e.get("type", "piece") for e in employees}
 
     for wk in week_keys:
-        pages = _notion_query_production(wk)
-        if pages:
-            entries = {}
-            for page in pages:
-                emp_id = get_property_value(page, "Employee")
-                if emp_id:
-                    entry = _notion_row_to_entry(page)
-                    # Normalize None day values based on employee type
-                    etype = emp_types.get(emp_id, "piece")
-                    for dk in DAY_KEYS:
-                        if entry["days"].get(dk) is None:
-                            if etype == "salaried":
-                                entry["days"][dk] = False
-                            elif etype == "piece":
-                                entry["days"][dk] = []
-                    entries[emp_id] = entry
-            weeks[wk] = {
-                "entries": entries,
-                "dates": weeks.get(wk, {}).get("dates", []),
-            }
-        elif wk not in weeks:
-            weeks[wk] = {"entries": {}, "dates": []}
+        try:
+            pages = _notion_query_production(wk)
+        except Exception as e:
+            print(f"[Production] Notion query failed for {wk}: {e}")
+            # Notion API failed — use local cache as fallback
+            if wk in local_weeks:
+                weeks[wk] = local_weeks[wk]
+            else:
+                weeks[wk] = {"entries": {}, "dates": []}
+            continue
+
+        # Notion succeeded — use its data even if empty (it's the source of truth)
+        entries = {}
+        for page in pages:
+            emp_id = get_property_value(page, "Employee")
+            if emp_id:
+                entry = _notion_row_to_entry(page)
+                # Normalize None day values based on employee type
+                etype = emp_types.get(emp_id, "piece")
+                for dk in DAY_KEYS:
+                    if entry["days"].get(dk) is None:
+                        if etype == "salaried":
+                            entry["days"][dk] = False
+                        elif etype == "piece":
+                            entry["days"][dk] = []
+                entries[emp_id] = entry
+        weeks[wk] = {
+            "entries": entries,
+            "dates": local_weeks.get(wk, {}).get("dates", []),
+        }
 
     config["weeks"] = weeks
     return jsonify(config)
