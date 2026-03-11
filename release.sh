@@ -43,7 +43,23 @@ npm run release
 # electron-builder creates drafts — publish them so auto-updater can see them
 echo ""
 echo "Publishing release v$NEW..."
-gh release edit "v$NEW" --repo jonnyfiive/yardhouse --draft=false 2>/dev/null || true
+
+# Try the expected tag name first
+if gh release edit "v$NEW" --repo jonnyfiive/yardhouse --draft=false 2>&1; then
+  echo "Published v$NEW"
+else
+  echo "Tag v$NEW not found, searching for draft release..."
+  # electron-builder sometimes creates untagged releases — find the latest draft
+  DRAFT_TAG=$(gh release list --repo jonnyfiive/yardhouse --limit 5 --json tagName,isDraft --jq '[.[] | select(.isDraft==true)] | .[0].tagName // empty')
+  if [ -n "$DRAFT_TAG" ]; then
+    echo "Found draft with tag: $DRAFT_TAG"
+    gh release edit "$DRAFT_TAG" --repo jonnyfiive/yardhouse --draft=false --tag "v$NEW" --title "$NEW"
+    echo "Published as v$NEW"
+  else
+    echo "WARNING: No draft release found. You may need to publish manually at:"
+    echo "  https://github.com/jonnyfiive/yardhouse/releases"
+  fi
+fi
 
 echo ""
 echo "=== Released Yardhouse v$NEW ==="
