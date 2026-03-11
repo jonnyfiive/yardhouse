@@ -15,6 +15,7 @@ interface OverdueItem {
 export default function TickerBar() {
   const { fetchQBOStatus, fetchARSummary, fetchARTopOverdue, API_BASE } = useApi()
   const [connected, setConnected] = useState(false)
+  const [available, setAvailable] = useState(true)
   const [ar, setAr] = useState<ARBadge | null>(null)
   const [overdueItems, setOverdueItems] = useState<OverdueItem[]>([])
 
@@ -25,6 +26,7 @@ export default function TickerBar() {
   async function loadStatus() {
     try {
       const status = await fetchQBOStatus()
+      setAvailable(status.available !== false)
       setConnected(status.connected)
       if (status.connected) {
         const arData = await fetchARSummary()
@@ -75,10 +77,15 @@ export default function TickerBar() {
               <span className="ar-badge-value">{fmt(ar.total_overdue)}</span>
             </div>
           </>
-        ) : (
+        ) : available ? (
           <button className="ar-connect-btn" onClick={connectQuickBooks}>
             Connect QuickBooks
           </button>
+        ) : (
+          <div className="ar-badge">
+            <span className="ar-badge-label">A/R</span>
+            <span className="ar-badge-value" style={{ opacity: 0.4 }}>—</span>
+          </div>
         )}
       </div>
       <div className="ticker">

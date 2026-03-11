@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, dialog } from 'electron'
+import { app, BrowserWindow, shell, dialog, Menu } from 'electron'
 import * as path from 'path'
 import { spawn, ChildProcess, execSync } from 'child_process'
 import * as fs from 'fs'
@@ -446,6 +446,89 @@ function createWindow() {
 }
 
 // ---------------------------------------------------------------------------
+// Application menu — adds "Check for Updates" under Yardhouse menu
+// ---------------------------------------------------------------------------
+function buildAppMenu(): void {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        {
+          label: 'Check for Updates…',
+          click: () => {
+            if (!app.isPackaged) {
+              dialog.showMessageBox({ message: 'Updates are only available in the packaged app.', buttons: ['OK'] })
+              return
+            }
+            autoUpdater.checkForUpdates().then((result) => {
+              if (!result || !result.updateInfo || result.updateInfo.version === app.getVersion()) {
+                dialog.showMessageBox({
+                  type: 'info',
+                  title: 'No Updates',
+                  message: `Yardhouse v${app.getVersion()} is up to date.`,
+                  buttons: ['OK'],
+                })
+              }
+            }).catch(() => {
+              dialog.showMessageBox({
+                type: 'warning',
+                title: 'Update Check Failed',
+                message: 'Could not check for updates. Please check your internet connection.',
+                buttons: ['OK'],
+              })
+            })
+          },
+        },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' },
+      ],
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        { role: 'close' },
+      ],
+    },
+  ]
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
+// ---------------------------------------------------------------------------
 // Auto-updater — checks GitHub Releases for new versions
 // ---------------------------------------------------------------------------
 function setupAutoUpdater(): void {
@@ -499,6 +582,7 @@ app.whenReady().then(async () => {
     return
   }
   createWindow()
+  buildAppMenu()
 
   // Check for updates after window is shown
   setTimeout(() => setupAutoUpdater(), 3000)

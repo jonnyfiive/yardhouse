@@ -815,8 +815,8 @@ def serve_logo(filename):
 def qbo_status():
     """Check if QuickBooks is connected."""
     if not qbo:
-        return jsonify({"connected": False, "error": "QBO module not loaded"})
-    return jsonify({"connected": qbo.is_connected()})
+        return jsonify({"connected": False, "available": False, "error": "QBO module not loaded"})
+    return jsonify({"connected": qbo.is_connected(), "available": True})
 
 
 @app.route("/qbo/connect", methods=["GET"])
