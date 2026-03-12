@@ -32,6 +32,7 @@
       "entitlementsInherit": "electron/entitlements.mac.inherit.plist",
       "notarize": true
     },
+    "afterPack": "./build/afterPack.js",
     "directories": {
       "output": "release"
     },
