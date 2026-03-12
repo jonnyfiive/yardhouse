@@ -4,5 +4,6 @@ requests>=2.31.0
 python-dotenv>=1.0.0
 anthropic>=0.39.0
 python-quickbooks>=0.9.0
-intuitlib>=0.0.5
+intuit-oauth>=1.0.0
 msal>=1.28.0
+gunicorn>=21.2.0

@@ -5,9 +5,7 @@ import { BriefingData, Topic, Customer, CustomerProduct } from './types/briefing
 import Header from './components/Header'
 import TickerBar from './components/TickerBar'
 import DeliveriesTable from './components/DeliveriesTable'
-import NextMoves from './components/NextMoves'
-import WaitingOn from './components/WaitingOn'
-import Overdue from './components/Overdue'
+import TodoCard from './components/TodoCard'
 import TopicPanel from './components/TopicPanel'
 import CustomerPanel from './components/CustomerPanel'
 import DeliveryReceiptPanel from './components/DeliveryReceiptPanel'
@@ -223,20 +221,9 @@ export default function App() {
                 lastSync={lastSync}
                 customers={customers}
               />
-              <NextMoves
-                items={data.nextMoves}
-                onTopicClick={openTopic}
-              />
             </div>
             <div className="sidebar">
-              <WaitingOn
-                items={data.waitingOn}
-                onTopicClick={openTopic}
-              />
-              <Overdue
-                items={data.overdue}
-                onTopicClick={openTopic}
-              />
+              <TodoCard />
             </div>
           </div>
         </div>

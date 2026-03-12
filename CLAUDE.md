@@ -303,11 +303,24 @@ QBO customer names don't always match Notion names. 3-tier matching:
 
 Result: 39 of 136 Notion customers matched to QBO balances ($470K total across 52 QBO customers)
 
-### Next Steps (when resuming mobile work)
-- Add new features / tabs as needed
-- Potentially convert to React Native / Expo for actual mobile deployment
-- Consider adding service worker for offline support
-- LaunchAgent plist (`com.justnation.yardhouse-server.plist`) still has old working directory — update to `~/Claude/Work/Projects/Yardhouse`
+### Production Deployment (deployed 2026-03-12)
+
+**Backend — Railway**
+- **URL:** `https://unique-patience-production-3270.up.railway.app`
+- **Deploy:** `cd ~/Claude/Work/Projects/Yardhouse && railway up`
+- **Auth:** `X-API-Key` header required on all `/api/*` routes; key in Railway env var `API_KEY`
+- **Health:** `curl https://unique-patience-production-3270.up.railway.app/health`
+- **Logs:** `railway service logs`
+- **Token refresh:** MSAL expires ~90 days, QBO ~100 days. Re-export from local `.ms-token-cache.json` / `.qbo_tokens.json` and `railway variables set MS_TOKEN_CACHE_JSON='...'`
+
+**Mobile App — TestFlight via EAS**
+- **ASC App ID:** 6760490553
+- **App Store Connect:** https://appstoreconnect.apple.com/apps/6760490553/testflight/ios
+- **To update the app:**
+  1. Bump `buildNumber` in `yardhouse-mobile/app.json`
+  2. `cd yardhouse-mobile && npx eas-cli build --platform ios --profile production`
+  3. `npx eas-cli submit --platform ios --latest`
+  4. Wait ~5-10 min for Apple processing, then update via TestFlight on iPhone
 
 ## Session Log — March 12, 2026
 

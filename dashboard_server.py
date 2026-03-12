@@ -30,6 +30,21 @@ except ImportError:
 app = Flask(__name__)
 CORS(app)
 
+# ── API Key Authentication ──────────────────────────────────────────────
+@app.before_request
+def check_api_key():
+    """Require X-API-Key header on API routes when API_KEY is set."""
+    api_key = os.environ.get("API_KEY")
+    if not api_key:
+        return  # No key configured = open access (local dev)
+    exempt = ['/health', '/qbo/callback', '/qbo/exchange']
+    if request.path in exempt:
+        return
+    if request.path.startswith('/api/') or request.path.startswith('/qbo/'):
+        provided = request.headers.get('X-API-Key')
+        if not provided or provided != api_key:
+            return jsonify({"error": "Unauthorized"}), 401
+
 # QuickBooks Online integration
 try:
     import qbo_integration as qbo
@@ -1701,12 +1716,19 @@ def _init_msal():
     # Find existing token cache (or set default save path)
     cache = msal.SerializableTokenCache()
     _msal_cache_path = _MSAL_TOKEN_CACHE_PATHS[0]  # default save location
-    for p in _MSAL_TOKEN_CACHE_PATHS:
-        if p.exists():
-            _msal_cache_path = p
-            cache.deserialize(p.read_text())
-            print(f"   MS Graph: loaded token cache from {p}")
-            break
+    # Support cloud deployment: load token cache from env var
+    env_cache = os.environ.get("MS_TOKEN_CACHE_JSON")
+    if env_cache:
+        cache.deserialize(env_cache)
+        _msal_cache_path = Path("/tmp/.ms-token-cache.json")
+        print(f"   MS Graph: loaded token cache from MS_TOKEN_CACHE_JSON env var")
+    else:
+        for p in _MSAL_TOKEN_CACHE_PATHS:
+            if p.exists():
+                _msal_cache_path = p
+                cache.deserialize(p.read_text())
+                print(f"   MS Graph: loaded token cache from {p}")
+                break
 
     _msal_app = msal.PublicClientApplication(
         client_id=AZURE_CLIENT_ID,
@@ -2340,15 +2362,18 @@ if __name__ == "__main__":
     print(f"   Delivery DB:  {DELIVERY_DB}")
     print(f"   Cache:        persistent (invalidate on save)")
 
+    port = int(os.environ.get("PORT", 5050))
+    debug = os.environ.get("FLASK_DEBUG", "true").lower() == "true"
+
     # Start email poller background thread
     # Guard against Werkzeug reloader spawning duplicate threads
-    if email_poller and os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+    if email_poller and (os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not debug):
         poller_thread = threading.Thread(target=_email_poll_loop, daemon=True)
         poller_thread.start()
         print(f"   Email poller: STARTED (every 5 min)\n")
     elif email_poller:
-        print(f"   Email poller: available (starts on reloader main process)\n")
+        print(f"   Email poller: available (waiting for reloader)\n")
     else:
         print(f"   Email poller: NOT AVAILABLE (import failed)\n")
 
-    app.run(host="0.0.0.0", port=5050, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=debug)

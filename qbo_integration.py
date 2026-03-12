@@ -39,10 +39,16 @@ AR_CACHE_TTL = 300  # 5 minutes
 # ============================================================================
 
 def _load_tokens():
-    """Load saved tokens from disk."""
+    """Load saved tokens from disk or QBO_TOKENS_JSON env var."""
     if os.path.exists(TOKEN_FILE):
         with open(TOKEN_FILE, "r") as f:
             return json.load(f)
+    env_tokens = os.environ.get("QBO_TOKENS_JSON")
+    if env_tokens:
+        try:
+            return json.loads(env_tokens)
+        except json.JSONDecodeError:
+            pass
     return {}
 
 

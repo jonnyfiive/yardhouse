@@ -3,6 +3,7 @@ dist/
 dist-electron/
 release/
 .qbo_tokens.json
+.ms-token-cache.json
 .env
 *.dmg
 *.blockmap
