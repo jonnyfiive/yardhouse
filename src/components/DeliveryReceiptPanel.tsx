@@ -8,7 +8,7 @@ interface DeliveryReceiptPanelProps {
 
 const STORAGE_KEY = 'jn-last-receipt-number'
 
-const STARTING_RECEIPT = 29640
+const STARTING_RECEIPT = 294500
 
 function getNextReceiptLocal(): string {
   const last = localStorage.getItem(STORAGE_KEY)

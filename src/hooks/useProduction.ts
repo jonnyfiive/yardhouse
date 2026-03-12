@@ -96,11 +96,15 @@ export function calculateTotal(
     }
   }
 
+  // Deductions decrease total, debits increase total
+  total -= (entry.deductions || 0)
+  total += (entry.debit || 0)
+
   return Math.round(total * 100) / 100
 }
 
 export function calculateCash(total: number, employee: Employee, entry: WeekEntry): number {
-  let cash = total - (employee.weeklyRate || 0) - (entry.deductions || 0) - (entry.debit || 0)
+  let cash = total - (employee.weeklyRate || 0)
   return Math.max(0, Math.round(cash * 100) / 100)
 }
 

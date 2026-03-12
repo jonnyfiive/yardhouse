@@ -3859,8 +3859,12 @@ body.dark-mode .piece-popover {
 
 /* Rates modal */
 .rates-modal {
-  min-width: 380px;
-  max-width: 440px;
+  background: var(--bg-card);
+  border-radius: var(--window-radius);
+  box-shadow: var(--window-shadow);
+  padding: 28px 32px 24px;
+  width: 640px;
+  max-width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
 }
@@ -3869,60 +3873,127 @@ body.dark-mode .piece-popover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 
 .rates-modal-header h3 {
   margin: 0;
-}
-
-.rates-modal-section {
-  margin-bottom: 16px;
-}
-
-.rates-modal-section h4 {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--label-primary);
-  margin-bottom: 8px;
-  padding-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.rates-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--fill-tertiary);
+  color: var(--label-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+  z-index: 10;
+}
+
+.rates-close-btn:hover {
+  background: var(--fill-secondary);
+  color: var(--label-primary);
+}
+
+.rates-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.rates-card {
+  background: var(--fill-quaternary);
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.rates-card:hover {
+  border-color: var(--fill-secondary);
+}
+
+.rates-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid var(--separator);
 }
 
-.rates-unit {
-  font-weight: 400;
-  color: var(--label-tertiary);
+.rates-card-icon {
+  color: var(--accent, var(--system-orange));
+  flex-shrink: 0;
+}
+
+.rates-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label-primary);
+  line-height: 1.2;
+}
+
+.rates-card-subtitle {
   font-size: 11px;
+  color: var(--label-tertiary);
+  margin-top: 1px;
 }
 
-.rates-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 12px;
+.rates-card-body {
+  padding: 8px 4px;
 }
 
-.rates-grid-row {
+.rates-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: background 0.1s;
 }
 
-.rates-grid-row:hover {
+.rates-row:hover {
   background: var(--fill-tertiary);
 }
 
-.rates-grid-label {
+.rates-row-label {
   font-size: 12px;
-  color: var(--label-primary);
+  color: var(--label-secondary);
 }
 
-.rates-grid-value {
-  font-size: 12px;
+.rates-row-value {
+  font-size: 13px;
   font-weight: 600;
-  color: var(--label-secondary);
+  color: var(--label-primary);
   font-variant-numeric: tabular-nums;
+}
+
+.rates-row-value-lg {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.rates-row-unit {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--label-tertiary);
+  margin-left: 1px;
+}
+
+.rates-row-divider {
+  height: 1px;
+  background: var(--separator);
+  margin: 4px 12px;
 }
 
 /* Add Employee Modal */

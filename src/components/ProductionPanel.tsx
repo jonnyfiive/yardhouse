@@ -642,52 +642,74 @@ export default function ProductionPanel({ onClose }: ProductionPanelProps) {
 
       {showRatesModal && (
         <div className="production-modal-backdrop" onClick={() => setShowRatesModal(false)}>
-          <div className="production-modal rates-modal" onClick={e => e.stopPropagation()}>
+          <div className="rates-modal" onClick={e => e.stopPropagation()}>
             <div className="rates-modal-header">
-              <h3>Rates & Bonus</h3>
-              <button className="remove-btn" onClick={() => setShowRatesModal(false)}>x</button>
+              <h3>Rates & Bonuses</h3>
+              <button className="rates-close-btn" onClick={e => { e.stopPropagation(); setShowRatesModal(false) }}>
+                <svg width="16" height="16" viewBox="0 0 14 14" fill="none" style={{ pointerEvents: 'none' }}><path d="M1.5 1.5l11 11M12.5 1.5l-11 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
             </div>
-
-            <div className="rates-modal-section">
-              <h4>Piece Rates <span className="rates-unit">(per pallet)</span></h4>
-              <div className="rates-grid">
-                {Object.entries(data.pieceRates).map(([type, rate]) => (
-                  <div key={type} className="rates-grid-row">
-                    <span className="rates-grid-label">{type}</span>
-                    <span className="rates-grid-value">${rate.toFixed(2)}</span>
+            <div className="rates-cards">
+              <div className="rates-card">
+                <div className="rates-card-header">
+                  <svg className="rates-card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" strokeWidth="1.5"/><path d="M2 9h20M6 14h4M6 17h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                  <div>
+                    <div className="rates-card-title">Piece Rates</div>
+                    <div className="rates-card-subtitle">Per pallet built</div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rates-modal-section">
-              <h4>Repair & Bundle <span className="rates-unit">(per stack)</span></h4>
-              <div className="rates-grid">
-                <div className="rates-grid-row">
-                  <span className="rates-grid-label">48x40</span>
-                  <span className="rates-grid-value">$10.00</span>
                 </div>
-                <div className="rates-grid-row">
-                  <span className="rates-grid-label">CHEP</span>
-                  <span className="rates-grid-value">$14.00</span>
-                </div>
-                <div className="rates-grid-row">
-                  <span className="rates-grid-label">Bundle</span>
-                  <span className="rates-grid-value">${data.bonusRates.bundle}.00</span>
-                </div>
-                <div className="rates-grid-row">
-                  <span className="rates-grid-label">Bundle (Sat)</span>
-                  <span className="rates-grid-value">${data.bonusRates.bundleSat}.00</span>
+                <div className="rates-card-body">
+                  {Object.entries(data.pieceRates).map(([type, rate]) => (
+                    <div key={type} className="rates-row">
+                      <span className="rates-row-label">{type}</span>
+                      <span className="rates-row-value">${rate.toFixed(2)}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
 
-            <div className="rates-modal-section">
-              <h4>Driver</h4>
-              <div className="rates-grid">
-                <div className="rates-grid-row">
-                  <span className="rates-grid-label">Driver Hourly</span>
-                  <span className="rates-grid-value">${data.bonusRates.driverHourly}/hr</span>
+              <div className="rates-card">
+                <div className="rates-card-header">
+                  <svg className="rates-card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <div>
+                    <div className="rates-card-title">Repair & Bundle</div>
+                    <div className="rates-card-subtitle">Per stack</div>
+                  </div>
+                </div>
+                <div className="rates-card-body">
+                  <div className="rates-row">
+                    <span className="rates-row-label">48x40 Repair</span>
+                    <span className="rates-row-value">$10.00</span>
+                  </div>
+                  <div className="rates-row">
+                    <span className="rates-row-label">CHEP Repair</span>
+                    <span className="rates-row-value">$14.00</span>
+                  </div>
+                  <div className="rates-row-divider" />
+                  <div className="rates-row">
+                    <span className="rates-row-label">Bundle</span>
+                    <span className="rates-row-value">${data.bonusRates.bundle}.00</span>
+                  </div>
+                  <div className="rates-row">
+                    <span className="rates-row-label">Bundle (Sat)</span>
+                    <span className="rates-row-value">${data.bonusRates.bundleSat}.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rates-card">
+                <div className="rates-card-header">
+                  <svg className="rates-card-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="1" y="3" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M16 8l5 3-5 3V8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="5" cy="19" r="2" stroke="currentColor" strokeWidth="1.5"/><circle cx="12" cy="19" r="2" stroke="currentColor" strokeWidth="1.5"/><path d="M7 19h3" stroke="currentColor" strokeWidth="1.5"/></svg>
+                  <div>
+                    <div className="rates-card-title">Driver</div>
+                    <div className="rates-card-subtitle">Hourly rate</div>
+                  </div>
+                </div>
+                <div className="rates-card-body">
+                  <div className="rates-row">
+                    <span className="rates-row-label">Hourly</span>
+                    <span className="rates-row-value rates-row-value-lg">${data.bonusRates.driverHourly}<span className="rates-row-unit">/hr</span></span>
+                  </div>
                 </div>
               </div>
             </div>

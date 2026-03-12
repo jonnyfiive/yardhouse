@@ -300,18 +300,10 @@ export default function ProductionCell({ employee, value, day, pieceRates, bonus
 
     return (
       <td
-        className={`production-cell cell-salaried ${isCustom ? 'cell-custom' : isPresent ? 'cell-present' : 'cell-absent'}`}
-        onClick={() => setPopoverOpen(true)}
+        className={`production-cell cell-salaried ${isPresent ? 'cell-present' : 'cell-absent'}`}
+        onClick={() => onChange(!isPresent)}
       >
-        {isCustom ? `$${customAmount}` : isPresent ? '+' : ''}
-        {popoverOpen && (
-          <SalariedPopover
-            isPresent={isPresent}
-            customVal={customAmount}
-            onSave={onChange}
-            onClose={() => setPopoverOpen(false)}
-          />
-        )}
+        {isPresent ? '+' : ''}
       </td>
     )
   }

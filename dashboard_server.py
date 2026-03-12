@@ -2240,7 +2240,7 @@ def delete_calendar_event(event_id):
 # ============================================================================
 
 RECEIPT_NUMBER_PATH = Path(__file__).parent / "receipt-number.json"
-STARTING_RECEIPT_NUMBER = 29640
+STARTING_RECEIPT_NUMBER = 294500
 
 
 def _load_receipt_number():
