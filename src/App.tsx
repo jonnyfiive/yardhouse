@@ -12,7 +12,6 @@ import TopicPanel from './components/TopicPanel'
 import CustomerPanel from './components/CustomerPanel'
 import DeliveryReceiptPanel from './components/DeliveryReceiptPanel'
 import ProductionPanel from './components/ProductionPanel'
-import ChatPanel from './components/ChatPanel'
 
 // Import the static briefing data
 import briefingDataJson from '../briefing-data.json'
@@ -266,7 +265,6 @@ export default function App() {
         onCustomersUpdate={setCustomers}
         focusCustomerName={focusCustomerName}
       />
-      <ChatPanel />
     </div>
   )
 }

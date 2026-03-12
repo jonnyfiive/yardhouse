@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   ProductionData, Employee, WeekEntry, WeekData, DayKey, DAY_KEYS,
-  PieceEntry, TimeEntry, EmployeeDefaults,
+  PieceEntry, TimeEntry, CustomEntry, EmployeeDefaults,
 } from '../types/production'
 
 const MAX_WEEKS = 10
@@ -88,6 +88,14 @@ export function calculateTotal(
     }
   }
 
+  // Add custom dollar amounts from any day
+  for (const key of DAY_KEYS) {
+    const dayVal = entry.days[key]
+    if (dayVal && typeof dayVal === 'object' && !Array.isArray(dayVal) && 'custom' in dayVal) {
+      total += (dayVal as CustomEntry).custom || 0
+    }
+  }
+
   return Math.round(total * 100) / 100
 }
 
@@ -135,8 +143,18 @@ export function useProduction() {
       const res = await fetch(`${API_BASE}/api/production`)
       const result = await res.json() as ProductionData
       // Recalculate all totals on load to ensure consistency
+      const empDefaults = result.employeeDefaults || {}
       for (const weekKey of Object.keys(result.weeks)) {
         const week = result.weeks[weekKey]
+        // Fill in any missing employees in every loaded week
+        for (const emp of result.employees) {
+          if (!week.entries[emp.id]) {
+            const defs = empDefaults[emp.id]
+            const entry = createEmptyEntry(emp, defs)
+            entry.total = calculateTotal(emp, entry, result.pieceRates, result.bonusRates)
+            week.entries[emp.id] = entry
+          }
+        }
         for (const empId of Object.keys(week.entries)) {
           const emp = result.employees.find(e => e.id === empId)
           const entry = week.entries[empId]
@@ -179,17 +197,23 @@ export function useProduction() {
   }, [debouncedSave])
 
   const ensureWeek = useCallback((weekKey: string, prodData: ProductionData): ProductionData => {
-    if (prodData.weeks[weekKey]) return prodData
-    const dates = getWeekDates(weekKey)
+    const existingWeek = prodData.weeks[weekKey]
+    const dates = existingWeek?.dates?.length ? existingWeek.dates : getWeekDates(weekKey)
     const empDefaults = prodData.employeeDefaults || {}
-    const entries: Record<string, WeekEntry> = {}
+    // Merge existing entries (from Notion) with defaults for missing employees
+    const existingEntries = existingWeek?.entries || {}
+    const entries: Record<string, WeekEntry> = { ...existingEntries }
+    let changed = !existingWeek
     for (const emp of prodData.employees) {
-      const defs = empDefaults[emp.id]
-      const entry = createEmptyEntry(emp, defs)
-      // Recalculate total with defaults applied
-      entry.total = calculateTotal(emp, entry, prodData.pieceRates, prodData.bonusRates)
-      entries[emp.id] = entry
+      if (!entries[emp.id]) {
+        const defs = empDefaults[emp.id]
+        const entry = createEmptyEntry(emp, defs)
+        entry.total = calculateTotal(emp, entry, prodData.pieceRates, prodData.bonusRates)
+        entries[emp.id] = entry
+        changed = true
+      }
     }
+    if (!changed) return prodData
     const newWeeks = {
       ...prodData.weeks,
       [weekKey]: { label: getWeekLabel(weekKey), dates, entries },
@@ -228,7 +252,7 @@ export function useProduction() {
   }, [data, ensureWeek, debouncedSave])
 
   const updateCell = useCallback((
-    employeeId: string, day: DayKey, value: boolean | PieceEntry[] | TimeEntry | null
+    employeeId: string, day: DayKey, value: boolean | PieceEntry[] | TimeEntry | CustomEntry | null
   ) => {
     updateData(prev => {
       const withWeek = ensureWeek(currentWeekKey, prev)

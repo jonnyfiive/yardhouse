@@ -28,8 +28,12 @@ export interface TimeEntry {
   out: string
 }
 
+export interface CustomEntry {
+  custom: number
+}
+
 export interface WeekEntry {
-  days: Record<DayKey, boolean | PieceEntry[] | TimeEntry | null>
+  days: Record<DayKey, boolean | PieceEntry[] | TimeEntry | CustomEntry | null>
   hrsPayroll?: number
   hrsWorked?: number | null
   deductions: number

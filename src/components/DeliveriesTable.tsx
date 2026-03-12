@@ -12,17 +12,13 @@ interface Props {
   customers: Customer[]
 }
 
-interface EditorState {
-  id: string
-  field: string
-  rect: DOMRect
-  options?: string[]
-  currentValue: string
-  type: 'dropdown' | 'text'
+interface EditModalState {
+  delivery: Delivery
 }
 
 export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCreate, onCustomerClick, lastSync, customers }: Props) {
-  const [editor, setEditor] = useState<EditorState | null>(null)
+  const [editModal, setEditModal] = useState<EditModalState | null>(null)
+  const [modalValues, setModalValues] = useState<Record<string, any>>({})
   const [refreshing, setRefreshing] = useState(false)
   const [showNewRow, setShowNewRow] = useState(false)
   const [newCustomer, setNewCustomer] = useState('')
@@ -31,10 +27,13 @@ export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCre
   const [creating, setCreating] = useState(false)
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const [modalCustomerSearch, setModalCustomerSearch] = useState('')
+  const [showModalCustomerDropdown, setShowModalCustomerDropdown] = useState(false)
+  const [modalCustomerHighlight, setModalCustomerHighlight] = useState(-1)
   const newInputRef = useRef<HTMLInputElement>(null)
   const customerDropdownRef = useRef<HTMLDivElement>(null)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null)
+  const modalCustomerRef = useRef<HTMLDivElement>(null)
 
   const customerNames = customers.map(c => c.name)
 
@@ -42,18 +41,33 @@ export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCre
     ? customerNames.filter(n => n.toLowerCase().includes(newCustomer.toLowerCase()))
     : customerNames
 
-  // Close editor on outside click
+  const modalFilteredCustomers = modalCustomerSearch.trim()
+    ? customerNames.filter(n => n.toLowerCase().includes(modalCustomerSearch.toLowerCase()))
+    : customerNames
+
+  // Close modal on outside click
   useEffect(() => {
-    if (!editor) return
+    if (!editModal) return
     const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
-        setEditor(null)
+      if (modalRef.current && !modalRef.current.contains(e.target as HTMLElement)) {
+        setEditModal(null)
       }
     }
-    setTimeout(() => document.addEventListener('click', handler), 10)
-    return () => document.removeEventListener('click', handler)
-  }, [editor])
+    setTimeout(() => document.addEventListener('mousedown', handler), 10)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [editModal])
+
+  // Close modal customer dropdown on outside click
+  useEffect(() => {
+    if (!showModalCustomerDropdown) return
+    const handler = (e: MouseEvent) => {
+      if (modalCustomerRef.current && !modalCustomerRef.current.contains(e.target as HTMLElement)) {
+        setShowModalCustomerDropdown(false)
+      }
+    }
+    setTimeout(() => document.addEventListener('mousedown', handler), 10)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showModalCustomerDropdown])
 
   // Close customer dropdown on outside click
   useEffect(() => {
@@ -69,65 +83,59 @@ export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCre
     return () => document.removeEventListener('click', handler)
   }, [showCustomerDropdown])
 
-  useEffect(() => {
-    if (editor?.type === 'text' && inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
-    }
-  }, [editor])
-
   const handleRefresh = async () => {
     setRefreshing(true)
     await onRefresh()
     setRefreshing(false)
   }
 
-  const openDropdown = (e: React.MouseEvent, id: string, field: string, options: string[], current: string) => {
-    e.stopPropagation()
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    setEditor({ id, field, rect, options, currentValue: current, type: 'dropdown' })
+  const openEditModal = (d: Delivery) => {
+    setEditModal({ delivery: d })
+    setModalValues({
+      status: d.status,
+      type: d.type,
+      driver: d.driver || '',
+      trip: d.trip || '',
+      notes: d.notes || '',
+      customer: d.customer,
+    })
+    setModalCustomerSearch(d.customer)
+    setShowModalCustomerDropdown(false)
+    setModalCustomerHighlight(-1)
   }
 
-  const openTextEditor = (e: React.MouseEvent, id: string, field: string, current: string) => {
-    e.stopPropagation()
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    setEditor({ id, field, rect, currentValue: current, type: 'text' })
-  }
-
-  const selectOption = (value: string) => {
-    if (editor) {
-      onUpdate(editor.id, editor.field, value)
-      setEditor(null)
+  const saveModal = () => {
+    if (!editModal) return
+    const d = editModal.delivery
+    const id = d.id!
+    // Only send updates for fields that actually changed
+    if (modalValues.status !== d.status) onUpdate(id, 'status', modalValues.status)
+    if (modalValues.type !== d.type) onUpdate(id, 'type', modalValues.type)
+    if (modalValues.driver !== (d.driver || '')) onUpdate(id, 'driver', modalValues.driver)
+    if (String(modalValues.trip) !== String(d.trip || '')) {
+      const tripVal = modalValues.trip ? parseInt(modalValues.trip) : null
+      onUpdate(id, 'trip', tripVal)
     }
-  }
-
-  const saveText = () => {
-    if (editor && inputRef.current) {
-      const val = editor.field === 'trip'
-        ? (inputRef.current.value ? parseInt(inputRef.current.value) : null)
-        : inputRef.current.value
-      onUpdate(editor.id, editor.field, val)
-      setEditor(null)
+    if (modalValues.notes !== (d.notes || '')) onUpdate(id, 'notes', modalValues.notes)
+    if (modalValues.customer !== d.customer) {
+      const match = customers.find(c => c.name === modalValues.customer)
+      if (match) onUpdate(id, 'customerId', match.id)
     }
+    setEditModal(null)
   }
 
   const handleCreate = async () => {
     if (!newCustomer.trim()) return
     setCreating(true)
     try {
-      // Look up customer ID by name
       const match = customers.find(c => c.name.toLowerCase() === newCustomer.trim().toLowerCase())
       const payload: any = {
         notes: newNotes,
         status: 'Scheduled',
         date: getDeliveryDate().date,
       }
-      if (newType) {
-        payload.type = newType
-      }
-      if (match) {
-        payload.customerId = match.id
-      }
+      if (newType) payload.type = newType
+      if (match) payload.customerId = match.id
       await onCreate(payload)
       setNewCustomer('')
       setNewType('')
@@ -168,7 +176,6 @@ export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCre
     } else if (e.key === 'Enter') {
       e.preventDefault()
       if (showCustomerDropdown && filteredCustomers.length > 0) {
-        // If highlighted, pick that one; otherwise pick the first match
         const pickIndex = highlightedIndex >= 0 ? highlightedIndex : 0
         selectCustomer(filteredCustomers[pickIndex])
       } else {
@@ -295,46 +302,25 @@ export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCre
         </thead>
         <tbody>
           {deliveries.map((d, idx) => (
-            <tr key={d.id || `${d.customer}-${idx}`}>
-              <td
-                className="customer-cell"
-                onClick={() => onCustomerClick(d.customer)}
-              >
+            <tr
+              key={d.id || `${d.customer}-${idx}`}
+              className="delivery-row-clickable"
+              onClick={() => openEditModal(d)}
+            >
+              <td className="customer-cell">
                 {d.customer}
               </td>
-              <td
-                className="editable-cell"
-                onClick={(e) => openDropdown(e, d.id!, 'type', DELIVERY_TYPES, d.type)}
-              >
+              <td className="editable-cell">
                 {d.type}
               </td>
-              <td
-                className="editable-cell"
-                onClick={(e) => openDropdown(e, d.id!, 'driver', DELIVERY_DRIVERS, d.driver)}
-              >
+              <td className="editable-cell">
                 {d.driver || ''}
-                {d.trip && (
-                  <sup
-                    className="trip-sup"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      openTextEditor(e, d.id!, 'trip', String(d.trip))
-                    }}
-                  >
-                    {d.trip}
-                  </sup>
-                )}
+                {d.trip && <sup className="trip-sup">{d.trip}</sup>}
               </td>
-              <td
-                className="editable-cell"
-                onClick={(e) => openDropdown(e, d.id!, 'status', DELIVERY_STATUSES, d.status)}
-              >
+              <td className="editable-cell">
                 <span className={`status-badge ${statusClass(d.status)}`}>{d.status}</span>
               </td>
-              <td
-                className="editable-cell truncate"
-                onClick={(e) => openTextEditor(e, d.id!, 'notes', d.notes || '')}
-              >
+              <td className="editable-cell truncate">
                 {d.notes || ''}
               </td>
             </tr>
@@ -344,52 +330,136 @@ export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCre
 
       {showNewRow && newRowContent}
 
-      {/* Inline editor */}
-      {editor && editor.type === 'dropdown' && (
-        <div
-          ref={dropdownRef}
-          className="inline-dropdown"
-          style={{
-            position: 'fixed',
-            top: editor.rect.bottom + 4,
-            left: editor.rect.left,
-            zIndex: 9999,
-            minWidth: Math.max(editor.rect.width, 160),
-          }}
-        >
-          {editor.options!.map((opt) => (
-            <div
-              key={opt}
-              className={`dropdown-option ${opt === editor.currentValue ? 'selected' : ''}`}
-              onClick={() => selectOption(opt)}
-            >
-              {opt || '(none)'}
+      {/* Edit Delivery Modal */}
+      {editModal && (
+        <div className="delivery-modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) setEditModal(null) }}>
+          <div ref={modalRef} className="delivery-modal">
+            <div className="delivery-modal-header">
+              <span className="delivery-modal-title">Edit Delivery</span>
+              <button className="delivery-modal-close" onClick={() => setEditModal(null)}>×</button>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="delivery-modal-body">
 
-      {editor && editor.type === 'text' && (
-        <div
-          style={{
-            position: 'fixed',
-            top: editor.rect.top,
-            left: editor.rect.left,
-            width: editor.rect.width,
-            zIndex: 9999,
-          }}
-        >
-          <input
-            ref={inputRef}
-            className="inline-input"
-            type={editor.field === 'trip' ? 'number' : 'text'}
-            defaultValue={editor.currentValue}
-            onBlur={saveText}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') { e.preventDefault(); saveText() }
-              if (e.key === 'Escape') setEditor(null)
-            }}
-          />
+              {/* Company */}
+              <label className="delivery-modal-label">Company</label>
+              <div className="delivery-modal-customer-wrap">
+                <input
+                  className="delivery-modal-input"
+                  value={modalCustomerSearch}
+                  onChange={e => {
+                    setModalCustomerSearch(e.target.value)
+                    setModalValues(v => ({ ...v, customer: e.target.value }))
+                    setShowModalCustomerDropdown(true)
+                    setModalCustomerHighlight(-1)
+                  }}
+                  onFocus={() => setShowModalCustomerDropdown(true)}
+                  onKeyDown={e => {
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault()
+                      setShowModalCustomerDropdown(true)
+                      setModalCustomerHighlight(prev => Math.min(prev + 1, modalFilteredCustomers.length - 1))
+                    } else if (e.key === 'ArrowUp') {
+                      e.preventDefault()
+                      setModalCustomerHighlight(prev => Math.max(prev - 1, 0))
+                    } else if (e.key === 'Enter' && showModalCustomerDropdown && modalFilteredCustomers.length > 0) {
+                      e.preventDefault()
+                      const pick = modalCustomerHighlight >= 0 ? modalCustomerHighlight : 0
+                      const name = modalFilteredCustomers[pick]
+                      setModalCustomerSearch(name)
+                      setModalValues(v => ({ ...v, customer: name }))
+                      setShowModalCustomerDropdown(false)
+                    }
+                  }}
+                  autoComplete="off"
+                />
+                {showModalCustomerDropdown && modalFilteredCustomers.length > 0 && (
+                  <div ref={modalCustomerRef} className="delivery-modal-customer-dropdown">
+                    {modalFilteredCustomers.slice(0, 8).map((name, i) => (
+                      <div
+                        key={name}
+                        className={`dropdown-option ${i === modalCustomerHighlight ? 'highlighted' : ''} ${name === modalValues.customer ? 'selected' : ''}`}
+                        onMouseDown={e => {
+                          e.preventDefault()
+                          setModalCustomerSearch(name)
+                          setModalValues(v => ({ ...v, customer: name }))
+                          setShowModalCustomerDropdown(false)
+                        }}
+                        onMouseEnter={() => setModalCustomerHighlight(i)}
+                      >
+                        {name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Status */}
+              <label className="delivery-modal-label">Status</label>
+              <div className="delivery-modal-options">
+                {DELIVERY_STATUSES.map(s => (
+                  <button
+                    key={s}
+                    className={`delivery-modal-option delivery-modal-status-${statusClass(s)} ${modalValues.status === s ? 'active' : ''}`}
+                    onClick={() => setModalValues(v => ({ ...v, status: s }))}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              {/* Type */}
+              <label className="delivery-modal-label">Type</label>
+              <div className="delivery-modal-options">
+                {DELIVERY_TYPES.map(t => (
+                  <button
+                    key={t}
+                    className={`delivery-modal-option ${modalValues.type === t ? 'active' : ''}`}
+                    onClick={() => setModalValues(v => ({ ...v, type: t }))}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              {/* Driver */}
+              <label className="delivery-modal-label">Driver</label>
+              <div className="delivery-modal-options">
+                {DELIVERY_DRIVERS.map(d => (
+                  <button
+                    key={d || '__none'}
+                    className={`delivery-modal-option ${modalValues.driver === d ? 'active' : ''}`}
+                    onClick={() => setModalValues(v => ({ ...v, driver: d }))}
+                  >
+                    {d || '(none)'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Trip */}
+              <label className="delivery-modal-label">Trip #</label>
+              <input
+                className="delivery-modal-input"
+                type="number"
+                value={modalValues.trip}
+                onChange={e => setModalValues(v => ({ ...v, trip: e.target.value }))}
+                placeholder="Trip number"
+              />
+
+              {/* Notes */}
+              <label className="delivery-modal-label">Notes</label>
+              <textarea
+                className="delivery-modal-textarea"
+                value={modalValues.notes}
+                onChange={e => setModalValues(v => ({ ...v, notes: e.target.value }))}
+                placeholder="Delivery notes..."
+                rows={3}
+              />
+            </div>
+            <div className="delivery-modal-footer">
+              <button className="delivery-modal-btn cancel" onClick={() => setEditModal(null)}>Cancel</button>
+              <button className="delivery-modal-btn save" onClick={saveModal}>Save</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -308,3 +308,45 @@ Result: 39 of 136 Notion customers matched to QBO balances ($470K total across 5
 - Potentially convert to React Native / Expo for actual mobile deployment
 - Consider adding service worker for offline support
 - LaunchAgent plist (`com.justnation.yardhouse-server.plist`) still has old working directory — update to `~/Claude/Work/Projects/Yardhouse`
+
+## Session Log — March 12, 2026
+
+### MS Graph Calendar + Tasks Integration (dashboard_server.py)
+**Problem:** Mobile app's Schedule and Tasks tabs were empty; calendar event edits didn't persist.
+
+**Root causes & fixes:**
+1. **Scope mismatch** — Pallet-sales MCP server's token cache only had Mail scopes (`Mail.Read`, `Mail.ReadWrite`, `Mail.Send`). Flask server needs `Tasks.ReadWrite` + `Calendars.ReadWrite` too. Fixed by adding all scopes to `MS_GRAPH_SCOPES` list.
+2. **Calendar PATCH 403** — Changed scope from `Calendars.Read` to `Calendars.ReadWrite`.
+3. **Calendar PATCH logic** — Rewrote to fetch existing event date as fallback anchor when `startDate` not sent. Handles `startTime` and `endTime` independently.
+4. **Timezone bug in GET /api/calendar** — Was returning UTC times. Added `Prefer: outlook.timezone="Eastern Standard Time"` header so times display correctly.
+5. **Token cache persistence** — Set default `_msal_cache_path` even when no file exists, so first-time auth saves properly.
+6. **Create/update task field mismatches** — Flask now accepts both `title`/`text` and `status`/`done` fields from the mobile client.
+7. **Auth resilience** — Added `_invalidate_graph_token()` and `_graph_request()` helper with automatic 401 retry. Added `/api/ms-auth` POST endpoint for triggering device code flow from browser, `/api/ms-auth/complete` to finish it, and `/api/ms-auth/status` to check state.
+
+**IMPORTANT for next session:** The MSAL token cache from the pallet-sales MCP server (`.token-cache.json`) may only have Mail scopes. If Calendar/Tasks return 401, the Flask server needs its own device code auth flow. Hit `POST /api/ms-auth` to start it, complete the device code at microsoft.com/devicelogin, then `POST /api/ms-auth/complete`.
+
+### Mobile App (yardhouse-mobile) — Time Picker
+- **Custom iOS-style scroll picker** (`src/components/TimePicker.tsx`) — three FlatList wheels (Hour 1-12, Minute 00/15/30/45, AM/PM) with `snapToInterval={44}` for snapping behavior.
+- `parse24()` / `to24()` convert between 12h and 24h formats.
+- No dark overlay background (user explicitly removed it).
+- Times displayed in 12-hour format on the TouchableOpacity fields.
+- `pickerTarget` state routes confirmed time to correct field (editStart/editEnd/newStart/newEnd).
+- Error banners ("CALENDAR OFFLINE" / "TASKS OFFLINE") show when Graph API auth fails.
+
+### Desktop App — Production Tab Fix
+**Problem:** Week 3/12-3/18 showed only the header row, no employee rows.
+
+**Root cause:** Backend returned the week from Notion with `{entries: {}, dates: []}` (no data entered yet). Frontend's `ensureWeek()` checked `if (prodData.weeks[weekKey]) return prodData` — since the week key existed (even with empty entries), it skipped populating defaults.
+
+**Fix in `src/hooks/useProduction.ts`:**
+- Changed check: now also verifies `Object.keys(existingWeek.entries).length > 0`
+- If week exists but entries are empty, populates default entries for all employees
+- Merges any existing Notion entries with defaults for missing employees
+- Preserves existing dates array if available
+
+**App rebuilt:** `npm run electron:build` → `release/mac-arm64/Yardhouse.app`
+
+### Known Issues / Watch Items
+- Flask debug reloader spawns two processes — can cause duplicate device code auth prompts. The child process (WERKZEUG_RUN_MAIN=true) is the one that serves requests.
+- When testing from the Cowork sandbox VM, `curl http://localhost:5050` hits the VM's own localhost, NOT the Mac's server. Use `osascript do shell script "curl ..."` to hit the Mac's server.
+- The packaged Yardhouse.app at `release/mac-arm64/` has its own embedded Flask server at `~/Library/Application Support/yardhouse/server/dashboard_server.py`. Changes to the project's `dashboard_server.py` need either: (a) rebuild the .app, or (b) the embedded copy is a symlink/same file.

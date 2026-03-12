@@ -1659,21 +1659,221 @@ def save_production():
 
 
 # ============================================================================
-# Microsoft To Do (Graph API) Integration
+# Microsoft Graph (MSAL OAuth) Integration
 # ============================================================================
+# Reuses the same Azure AD app registration as the pallet-sales MCP server.
+# Token cache is shared so if you've already authenticated via the MCP server,
+# no additional login is needed.
 
-MS_GRAPH_TOKEN = os.environ.get("MS_GRAPH_TOKEN", "")
 MS_GRAPH_BASE = "https://graph.microsoft.com/v1.0"
+AZURE_CLIENT_ID = "38628aa9-d0f8-405a-a1e7-e3e8af735c07"
+AZURE_TENANT_ID = "bfeb2076-6e72-4b34-9cf6-60c1773a664f"
+MS_GRAPH_SCOPES = [
+    "https://graph.microsoft.com/Mail.Read",
+    "https://graph.microsoft.com/Mail.ReadWrite",
+    "https://graph.microsoft.com/Mail.Send",
+    "https://graph.microsoft.com/Tasks.ReadWrite",
+    "https://graph.microsoft.com/Calendars.ReadWrite",
+]
+
+# Find token cache from pallet-sales MCP server
+_MSAL_TOKEN_CACHE_PATHS = [
+    Path(__file__).parent.parent / "Pallet Operations" / "pallet-sales-mcp-server" / ".token-cache.json",
+    Path(__file__).parent / ".ms-token-cache.json",
+    Path.home() / ".pallet-sales-token-cache.json",
+]
+
+_msal_app = None
+_msal_cache_path = None
+
+def _init_msal():
+    """Initialize MSAL public client with persistent token cache."""
+    global _msal_app, _msal_cache_path
+    if _msal_app:
+        return _msal_app
+
+    try:
+        import msal
+    except ImportError:
+        print("   ⚠️  msal not installed — run: pip install msal")
+        return None
+
+    # Find existing token cache (or set default save path)
+    cache = msal.SerializableTokenCache()
+    _msal_cache_path = _MSAL_TOKEN_CACHE_PATHS[0]  # default save location
+    for p in _MSAL_TOKEN_CACHE_PATHS:
+        if p.exists():
+            _msal_cache_path = p
+            cache.deserialize(p.read_text())
+            print(f"   MS Graph: loaded token cache from {p}")
+            break
+
+    _msal_app = msal.PublicClientApplication(
+        client_id=AZURE_CLIENT_ID,
+        authority=f"https://login.microsoftonline.com/{AZURE_TENANT_ID}",
+        token_cache=cache,
+    )
+    return _msal_app
+
+
+_graph_token_cache = {"token": None, "expires": 0}
+_device_flow_state = {"flow": None, "status": "idle"}  # for async device code auth
+
+def _save_msal_cache():
+    """Save MSAL token cache to disk."""
+    if _msal_cache_path and _msal_app and _msal_app.token_cache.has_state_changed:
+        _msal_cache_path.write_text(_msal_app.token_cache.serialize())
+
+def _get_graph_token(allow_device_flow=False):
+    """Get a valid MS Graph access token via silent refresh.
+    If allow_device_flow=True (startup only), will block for device code auth.
+    Otherwise returns None if silent refresh fails.
+    """
+    import time as _time
+
+    # Return cached token if still valid
+    if _graph_token_cache["token"] and _time.time() < _graph_token_cache["expires"]:
+        return _graph_token_cache["token"]
+
+    app = _init_msal()
+    if not app:
+        return None
+
+    accounts = app.get_accounts()
+
+    # Try silent acquisition first
+    if accounts:
+        result = app.acquire_token_silent(MS_GRAPH_SCOPES, account=accounts[0])
+        if result and "access_token" in result:
+            _save_msal_cache()
+            _graph_token_cache["token"] = result["access_token"]
+            _graph_token_cache["expires"] = _time.time() + 3000  # ~50 min
+            return result["access_token"]
+
+        err = result.get('error_description', 'unknown error') if result else 'scopes not yet authorized'
+        print(f"   MS Graph: silent refresh failed — {err}", flush=True)
+
+    # Only do device code flow at startup (blocking)
+    if allow_device_flow:
+        print("\n" + "=" * 50)
+        print("MS GRAPH LOGIN REQUIRED")
+        print("Need consent for: Mail + Tasks + Calendar scopes")
+        print("=" * 50)
+        flow = app.initiate_device_flow(scopes=MS_GRAPH_SCOPES)
+        if "user_code" not in flow:
+            print(f"   MS Graph: device flow failed — {flow.get('error_description', 'unknown')}")
+            return None
+        print(f"\n   {flow['message']}\n")
+        result = app.acquire_token_by_device_flow(flow)
+        if result and "access_token" in result:
+            _save_msal_cache()
+            print("   ✅ MS Graph authenticated!")
+            _graph_token_cache["token"] = result["access_token"]
+            _graph_token_cache["expires"] = _time.time() + 3000
+            return result["access_token"]
+        err = result.get('error_description', 'unknown error') if result else 'no result'
+        print(f"   MS Graph: device code auth failed — {err}")
+
+    return None
+
+def _invalidate_graph_token():
+    """Clear the in-memory token cache so next call re-acquires."""
+    _graph_token_cache["token"] = None
+    _graph_token_cache["expires"] = 0
+
 
 def ms_graph_headers():
+    token = _get_graph_token()
+    if not token:
+        return None
     return {
-        "Authorization": f"Bearer {MS_GRAPH_TOKEN}",
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
 
+def _graph_request(method, url, **kwargs):
+    """Make a Graph API request with automatic 401 retry (re-acquires token)."""
+    hdrs = ms_graph_headers()
+    if not hdrs:
+        return None
+    resp = requests.request(method, url, headers=hdrs, **kwargs)
+    if resp.status_code == 401:
+        _invalidate_graph_token()
+        hdrs = ms_graph_headers()
+        if not hdrs:
+            return None
+        resp = requests.request(method, url, headers=hdrs, **kwargs)
+    return resp
+
+
+# ── MS Auth Trigger (device code flow via HTTP) ──────────────────────────
+
+@app.route("/api/ms-auth", methods=["POST"])
+def trigger_ms_auth():
+    """Start device code flow for MS Graph authentication.
+    Returns the user_code and verification_uri for the user to complete."""
+    app_msal = _init_msal()
+    if not app_msal:
+        return jsonify({"error": "MSAL not available"}), 500
+
+    flow = app_msal.initiate_device_flow(scopes=MS_GRAPH_SCOPES)
+    if "user_code" not in flow:
+        return jsonify({"error": flow.get("error_description", "Device flow failed")}), 500
+
+    _device_flow_state["flow"] = flow
+    _device_flow_state["status"] = "pending"
+
+    return jsonify({
+        "user_code": flow["user_code"],
+        "verification_uri": flow.get("verification_uri", "https://microsoft.com/devicelogin"),
+        "message": flow.get("message", ""),
+        "expires_in": flow.get("expires_in", 900),
+    })
+
+
+@app.route("/api/ms-auth/complete", methods=["POST"])
+def complete_ms_auth():
+    """Complete the device code flow after user has authenticated."""
+    import time as _time
+
+    app_msal = _init_msal()
+    if not app_msal:
+        return jsonify({"error": "MSAL not available"}), 500
+
+    flow = _device_flow_state.get("flow")
+    if not flow:
+        return jsonify({"error": "No pending auth flow. POST /api/ms-auth first."}), 400
+
+    result = app_msal.acquire_token_by_device_flow(flow)
+    if result and "access_token" in result:
+        _save_msal_cache()
+        _graph_token_cache["token"] = result["access_token"]
+        _graph_token_cache["expires"] = _time.time() + 3000
+        _device_flow_state["flow"] = None
+        _device_flow_state["status"] = "authenticated"
+        return jsonify({"ok": True, "message": "MS Graph authenticated with all scopes!"})
+
+    err = result.get("error_description", "Unknown error") if result else "No result"
+    _device_flow_state["status"] = "failed"
+    return jsonify({"error": err}), 400
+
+
+@app.route("/api/ms-auth/status", methods=["GET"])
+def ms_auth_status():
+    """Check current MS Graph auth status."""
+    token = _get_graph_token()
+    return jsonify({
+        "authenticated": token is not None,
+        "device_flow_pending": _device_flow_state.get("status") == "pending",
+    })
+
+
 def get_todo_default_list_id():
     """Get the default 'Tasks' list ID from Microsoft To Do."""
-    resp = requests.get(f"{MS_GRAPH_BASE}/me/todo/lists", headers=ms_graph_headers())
+    hdrs = ms_graph_headers()
+    if not hdrs:
+        return None
+    resp = requests.get(f"{MS_GRAPH_BASE}/me/todo/lists", headers=hdrs)
     if resp.status_code != 200:
         return None
     lists = resp.json().get("value", [])
@@ -1688,8 +1888,8 @@ def get_todo_default_list_id():
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
     """Get all tasks from Microsoft To Do (default list)."""
-    if not MS_GRAPH_TOKEN:
-        return jsonify({"error": "MS_GRAPH_TOKEN not configured", "tasks": []}), 200
+    if not ms_graph_headers():
+        return jsonify({"error": "MS Graph not authenticated — connect via pallet-sales MCP first", "tasks": []}), 200
 
     list_id = get_todo_default_list_id()
     if not list_id:
@@ -1741,11 +1941,11 @@ def get_tasks():
 @app.route("/api/tasks", methods=["POST"])
 def create_task():
     """Create a new task in Microsoft To Do."""
-    if not MS_GRAPH_TOKEN:
-        return jsonify({"error": "MS_GRAPH_TOKEN not configured"}), 400
+    if not ms_graph_headers():
+        return jsonify({"error": "MS Graph not authenticated"}), 400
 
     data = request.json or {}
-    text = data.get("text", "").strip()
+    text = (data.get("title") or data.get("text") or "").strip()
     tag = data.get("tag", "OPS")
     if not text:
         return jsonify({"error": "Task text required"}), 400
@@ -1786,8 +1986,8 @@ def create_task():
 @app.route("/api/tasks/<task_id>", methods=["PATCH"])
 def update_task(task_id):
     """Update a task (complete/uncomplete) in Microsoft To Do."""
-    if not MS_GRAPH_TOKEN:
-        return jsonify({"error": "MS_GRAPH_TOKEN not configured"}), 400
+    if not ms_graph_headers():
+        return jsonify({"error": "MS Graph not authenticated"}), 400
 
     data = request.json or {}
     list_id = get_todo_default_list_id()
@@ -1795,9 +1995,14 @@ def update_task(task_id):
         return jsonify({"error": "No task list found"}), 400
 
     body = {}
-    if "done" in data:
+    if "status" in data:
+        # Client sends { status: 'completed' | 'notStarted' } directly
+        body["status"] = data["status"]
+    elif "done" in data:
         body["status"] = "completed" if data["done"] else "notStarted"
-    if "text" in data:
+    if "title" in data:
+        body["title"] = data["title"]
+    elif "text" in data:
         body["title"] = data["text"]
     if "tag" in data:
         body["categories"] = [data["tag"]]
@@ -1816,8 +2021,8 @@ def update_task(task_id):
 @app.route("/api/tasks/<task_id>", methods=["DELETE"])
 def delete_task(task_id):
     """Delete a task from Microsoft To Do."""
-    if not MS_GRAPH_TOKEN:
-        return jsonify({"error": "MS_GRAPH_TOKEN not configured"}), 400
+    if not ms_graph_headers():
+        return jsonify({"error": "MS Graph not authenticated"}), 400
 
     list_id = get_todo_default_list_id()
     if not list_id:
@@ -1831,6 +2036,181 @@ def delete_task(task_id):
     if resp.status_code in (200, 204):
         return jsonify({"ok": True})
     return jsonify({"error": f"Graph API error {resp.status_code}"}), 500
+
+
+# ============================================================================
+# Outlook Calendar (Graph API) Integration
+# ============================================================================
+
+@app.route("/api/calendar", methods=["GET"])
+def get_calendar():
+    """Get upcoming calendar events from Outlook (next 7 days by default)."""
+    if not ms_graph_headers():
+        return jsonify({"error": "MS Graph not authenticated", "events": []}), 200
+
+    days = int(request.args.get("days", 7))
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    end = now + timedelta(days=days)
+
+    params = {
+        "startDateTime": now.strftime("%Y-%m-%dT%H:%M:%S.0000000Z"),
+        "endDateTime": end.strftime("%Y-%m-%dT%H:%M:%S.0000000Z"),
+        "$top": "50",
+        "$orderby": "start/dateTime",
+        "$select": "subject,start,end,location,organizer,attendees,isAllDay,bodyPreview",
+    }
+
+    hdrs = ms_graph_headers()
+    if hdrs:
+        hdrs["Prefer"] = 'outlook.timezone="Eastern Standard Time"'
+    resp = requests.get(
+        f"{MS_GRAPH_BASE}/me/calendarview",
+        headers=hdrs,
+        params=params,
+    )
+
+    if resp.status_code != 200:
+        return jsonify({"error": f"Graph API error {resp.status_code}", "events": []}), 200
+
+    raw = resp.json().get("value", [])
+    events = []
+    for ev in raw:
+        start = ev.get("start", {})
+        end_t = ev.get("end", {})
+        organizer = ev.get("organizer", {}).get("emailAddress", {})
+        attendees = [
+            a.get("emailAddress", {}).get("name", "")
+            for a in ev.get("attendees", [])
+        ]
+        events.append({
+            "id": ev.get("id", ""),
+            "subject": ev.get("subject", ""),
+            "startDate": start.get("dateTime", "")[:10],
+            "startTime": start.get("dateTime", "")[11:16] if "T" in start.get("dateTime", "") else "",
+            "endTime": end_t.get("dateTime", "")[11:16] if "T" in end_t.get("dateTime", "") else "",
+            "location": ev.get("location", {}).get("displayName", ""),
+            "isAllDay": ev.get("isAllDay", False),
+            "organizer": organizer.get("name", ""),
+            "attendees": attendees,
+            "preview": ev.get("bodyPreview", "")[:100],
+        })
+
+    return jsonify({"events": events})
+
+
+@app.route("/api/calendar", methods=["POST"])
+def create_calendar_event():
+    """Create a new Outlook calendar event."""
+    if not ms_graph_headers():
+        return jsonify({"error": "MS Graph not authenticated"}), 400
+
+    data = request.json or {}
+    subject = data.get("subject", "New Event")
+    start_date = data.get("startDate")  # "2026-03-14"
+    start_time = data.get("startTime", "09:00")  # "09:00"
+    end_time = data.get("endTime", "10:00")  # "10:00"
+    location = data.get("location", "")
+    is_all_day = data.get("isAllDay", False)
+    body = data.get("body", "")
+
+    if not start_date:
+        return jsonify({"error": "startDate required"}), 400
+
+    if is_all_day:
+        event_body = {
+            "subject": subject,
+            "isAllDay": True,
+            "start": {"dateTime": f"{start_date}T00:00:00", "timeZone": "Eastern Standard Time"},
+            "end": {"dateTime": f"{start_date}T00:00:00", "timeZone": "Eastern Standard Time"},
+        }
+    else:
+        event_body = {
+            "subject": subject,
+            "start": {"dateTime": f"{start_date}T{start_time}:00", "timeZone": "Eastern Standard Time"},
+            "end": {"dateTime": f"{start_date}T{end_time}:00", "timeZone": "Eastern Standard Time"},
+        }
+
+    if location:
+        event_body["location"] = {"displayName": location}
+    if body:
+        event_body["body"] = {"contentType": "text", "content": body}
+
+    resp = requests.post(
+        f"{MS_GRAPH_BASE}/me/events",
+        headers=ms_graph_headers(),
+        json=event_body,
+    )
+    if resp.status_code in (200, 201):
+        ev = resp.json()
+        return jsonify({"id": ev.get("id"), "subject": ev.get("subject"), "ok": True})
+    return jsonify({"error": f"Graph API error {resp.status_code}", "detail": resp.text}), resp.status_code
+
+
+@app.route("/api/calendar/<path:event_id>", methods=["PATCH"])
+def update_calendar_event(event_id):
+    """Update an existing Outlook calendar event."""
+    if not ms_graph_headers():
+        return jsonify({"error": "MS Graph not authenticated"}), 400
+
+    data = request.json or {}
+    update = {}
+
+    if "subject" in data:
+        update["subject"] = data["subject"]
+    if "location" in data:
+        update["location"] = {"displayName": data["location"]}
+    if "isAllDay" in data:
+        update["isAllDay"] = data["isAllDay"]
+
+    # Build start/end — need the date anchor to form the datetime string.
+    # If startDate wasn't sent, fetch the existing event to get the current date.
+    date_anchor = data.get("startDate")
+    needs_time_update = "startTime" in data or "endTime" in data or "startDate" in data
+    if needs_time_update and not date_anchor:
+        # Fetch existing event to get current start date
+        existing = requests.get(
+            f"{MS_GRAPH_BASE}/me/events/{event_id}",
+            headers=ms_graph_headers(),
+            params={"$select": "start,end"},
+        )
+        if existing.status_code == 200:
+            ex = existing.json()
+            date_anchor = ex.get("start", {}).get("dateTime", "")[:10]
+
+    if needs_time_update and date_anchor:
+        if "startTime" in data or "startDate" in data:
+            start_time = data.get("startTime", "09:00")
+            update["start"] = {"dateTime": f"{date_anchor}T{start_time}:00", "timeZone": "Eastern Standard Time"}
+        if "endTime" in data:
+            update["end"] = {"dateTime": f"{date_anchor}T{data['endTime']}:00", "timeZone": "Eastern Standard Time"}
+
+    if not update:
+        return jsonify({"ok": True, "noop": True})
+
+    resp = requests.patch(
+        f"{MS_GRAPH_BASE}/me/events/{event_id}",
+        headers=ms_graph_headers(),
+        json=update,
+    )
+    if resp.status_code == 200:
+        return jsonify({"ok": True})
+    return jsonify({"error": f"Graph API error {resp.status_code}", "detail": resp.text}), resp.status_code
+
+
+@app.route("/api/calendar/<path:event_id>", methods=["DELETE"])
+def delete_calendar_event(event_id):
+    """Delete an Outlook calendar event."""
+    if not ms_graph_headers():
+        return jsonify({"error": "MS Graph not authenticated"}), 400
+
+    resp = requests.delete(
+        f"{MS_GRAPH_BASE}/me/events/{event_id}",
+        headers=ms_graph_headers(),
+    )
+    if resp.status_code == 204:
+        return jsonify({"ok": True})
+    return jsonify({"error": f"Graph API error {resp.status_code}"}), resp.status_code
 
 
 # ============================================================================
@@ -1952,7 +2332,9 @@ if __name__ == "__main__":
 
     print(f"\n🚀 JUST NATION Dashboard Server starting on http://localhost:5050")
     print(f"   Notion token: {'configured' if NOTION_TOKEN else 'NOT SET'}")
-    print(f"   MS Graph:     {'configured' if MS_GRAPH_TOKEN else 'NOT SET (tasks sync disabled)'}")
+    _init_msal()
+    _graph_ok = _get_graph_token(allow_device_flow=True) is not None
+    print(f"   MS Graph:     {'connected (MSAL)' if _graph_ok else 'NOT AUTHENTICATED (run pallet-sales MCP first)'}")
     print(f"   Companies DB: {COMPANIES_DB}")
     print(f"   Products DB:  {PRODUCTS_DB}")
     print(f"   Delivery DB:  {DELIVERY_DB}")
