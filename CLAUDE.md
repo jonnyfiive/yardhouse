@@ -13,6 +13,31 @@ Email: jonathan@justnationllc.com | Website: www.justnationusa.com
 - DeftFulfillment is ONE WORD (not "Deft Fulfillment")
 - Direct, no-nonsense communication style
 - macOS Tahoe design language throughout
+- **"Push it through"** = build + publish a GitHub Release so all users get the update via auto-updater
+- If Jonathan reports the app crashed, recommend switching the desktop app to the Railway backend
+
+## How to Push an Update (GitHub Release)
+
+When Jonathan says "push it through" or "push the update", do this:
+
+1. **Bump version** in `package.json` (increment patch/minor as appropriate)
+2. **Build**: `npm run build` then `npx electron-builder --mac dmg zip`
+   - Outputs: `release/Yardhouse-X.Y.Z-arm64-mac.zip`, `.dmg`, `.blockmap` files, and `latest-mac.yml`
+3. **Create GitHub Release**:
+   ```bash
+   gh release create vX.Y.Z --title "Yardhouse vX.Y.Z" --notes "Release notes here"
+   ```
+4. **Upload assets** (small files first, then large ones backgrounded):
+   ```bash
+   gh release upload vX.Y.Z release/latest-mac.yml release/*.blockmap
+   gh release upload vX.Y.Z release/Yardhouse-X.Y.Z-arm64-mac.zip release/Yardhouse-X.Y.Z-arm64.dmg
+   ```
+5. **Update /Applications/**: `npm run electron:build` handles this automatically
+6. **Deploy to Railway** if server code changed: `railway up`
+
+> **Note:** `osascript` times out on large file uploads. Use `nohup gh release upload ... &` for the ZIP and DMG.
+> **Note:** The `electron:build` script auto-copies to `/Applications/Yardhouse.app`.
+> **GitHub repo:** `jonnyfiive/yardhouse` — electron-updater checks GitHub Releases for `latest-mac.yml`.
 
 ## Folder Structure
 ```
@@ -268,32 +293,37 @@ The original `Daily Briefing.html` is in `legacy/` and is **no longer the primar
 | `AccountsTab` | Customer directory with search + expandable cards |
 | `JNLogo` | SVG 5-bar diamond logo mark |
 
-### Current State (as of 2026-03-09)
-- **Connected to live Flask API** on localhost:5050 (all tabs pull real data)
-- All inline styles (no CSS file)
-- Phone frame wrapper for desktop preview — served via Python HTTP server on port 8888
-- Status dot tap cycles through statuses
-- Row tap expands detail panel
-- **File location:** `Yardhouse Mobile App/index.html` (single-file PWA, ~2200 lines)
+### Current State (as of 2026-03-13)
+- **Expo 55 + React Native + TypeScript + Expo Router** native app
+- **Connected to Railway backend** (`https://unique-patience-production-3270.up.railway.app`)
+- **Design system:** Nothing Phone-inspired — monochromatic palette, NDot47 dot-matrix font, industrial/minimal aesthetic
+- Status dot tap cycles through statuses, row tap expands detail panel
+- Swipe-left to dismiss emails in Today tab
+- Custom scroll-wheel DatePicker and TimePicker components
 
 ### Live Data Integration
 | Tab | Data Source | Endpoint |
 |-----|-----------|----------|
 | DISPATCH | Deliveries from Notion | `/api/deliveries?days=0` |
-| ACTIONS > Today | Email briefing items | `/api/briefing` |
-| ACTIONS > Tasks | Next moves from briefing | `/api/briefing` |
-| ACTIONS > Schedule | Upcoming deliveries | `/api/deliveries?days=7` |
+| ACTIONS > Today | Outlook focused inbox emails | `/api/emails` |
+| ACTIONS > Tasks | MS Graph To Do tasks | `/api/tasks` |
+| ACTIONS > Schedule | MS Graph Calendar events | `/api/calendar` |
 | ACCOUNTS | Companies + contacts from Notion | `/api/customers-with-products` |
 | ACCOUNTS (balances) | All open QBO invoices | `/api/ar-by-customer` |
 
-### DataStore Pattern
-Global reactive store (`window.DataStore`) with listener-based re-rendering:
-- `DataStore.customers` — array of companies with contacts, products, balance
-- `DataStore.deliveries` — today's deliveries
-- `DataStore.briefing` — email briefing (next moves, waiting on, overdue)
-- `DataStore.arSummary` — AR totals from QBO
-- `DataStore._notify()` — triggers all registered listeners to re-render
-- `DataStore.init()` — fetches deliveries, customers → AR (chained), briefing on load
+### Design System — Nothing Phone Theme
+- **Fonts:** NDot47 (display/customer names), JetBrains Mono (data/mono), Space Grotesk (headings)
+- **Light mode:** bg `#E6E6E6`, white `#FFFFFF`, black `#1A1A1A`
+- **Dark mode:** bg `#1A1A1A`, white `#2A2A2A`, black `#E5E5E5`, tab bar bg `#0D0D0D`
+- **Accent:** `#FF5000` (Just Nation orange) — used in both light and dark modes
+- **Done/completed:** `#00C853` green
+- **Tab bar:** Black pills (light) / gray pills (dark), selected tab has luminous ring, transparent background
+- **Cards:** Transparent/borderless for rows, 2px black border for expanded detail cards
+- **Buttons:** Pill-shaped (borderRadius 50), black fill or transparent with subtle border
+- **Segmented control (Actions):** Flat underline-style tabs, not pill buttons
+- **Tasks:** Flat rows with round circle checkboxes, no card backgrounds
+- **Emails:** Mono font, swipe-left to dismiss, 4-line body truncation
+- **KPI boxes (Dispatch):** Transparent background, thin border, compact sizing, left-aligned with + button on right
 
 ### AR Balance Name Matching
 QBO customer names don't always match Notion names. 3-tier matching:
@@ -363,3 +393,72 @@ Result: 39 of 136 Notion customers matched to QBO balances ($470K total across 5
 - Flask debug reloader spawns two processes — can cause duplicate device code auth prompts. The child process (WERKZEUG_RUN_MAIN=true) is the one that serves requests.
 - When testing from the Cowork sandbox VM, `curl http://localhost:5050` hits the VM's own localhost, NOT the Mac's server. Use `osascript do shell script "curl ..."` to hit the Mac's server.
 - The packaged Yardhouse.app at `release/mac-arm64/` has its own embedded Flask server at `~/Library/Application Support/yardhouse/server/dashboard_server.py`. Changes to the project's `dashboard_server.py` need either: (a) rebuild the .app, or (b) the embedded copy is a symlink/same file.
+
+## Session Log — March 13, 2026
+
+### Delivery List Disappeared — Timezone Fix
+**Problem:** Railway API returned 0 deliveries for today even though 15 existed in Notion. Local server worked fine.
+
+**Root cause:** `datetime.now()` returns UTC on Railway. When UTC was already the next day (e.g., after 7pm ET), the date filter missed today's Eastern-time deliveries.
+
+**Fix in `dashboard_server.py`:**
+- Added `from zoneinfo import ZoneInfo`
+- Created `_now_eastern()` helper: `datetime.now(ZoneInfo("America/New_York"))`
+- Updated `fetch_deliveries()`, email endpoint, and chat context to use `_now_eastern()` instead of `datetime.now()`
+- Deployed to Railway — confirmed 15 deliveries returned correctly
+
+### Nothing Phone UI Redesign (Mobile App)
+Complete visual overhaul of `yardhouse-mobile` to Nothing Phone-inspired aesthetic:
+
+**Theme (`src/contexts/ThemeContext.tsx`):**
+- Monochromatic palette replacing all pastels/colors
+- Light: `#E6E6E6` bg, `#FFFFFF` cards, `#1A1A1A` text
+- Dark: `#1A1A1A` bg, `#2A2A2A` cards, `#E5E5E5` text
+- All purple/lavender replaced with `#FF5000` orange
+- Same orange in both light and dark modes
+
+**NDot47 Font:**
+- Downloaded from GitHub `Taberdo-DCET/Nothing-Phone-UI-Design`
+- Loaded via `expo-font` in `app/_layout.tsx`
+- Used for customer names across all screens (`Fonts.display`)
+
+**Dispatch Tab (`app/(tabs)/dispatch.tsx`):**
+- KPI pills: compact, transparent bg, thin borders, left-aligned with + button on right
+- + button: round (borderRadius 18), transparent
+- Removed type column from delivery rows and header
+- Driver column widened (44→56) for better spacing
+- Progress bar: borderless, height 4
+
+**Tab Bar (`app/(tabs)/_layout.tsx`):**
+- All tabs black pills (light) / gray pills (dark)
+- Selected tab: luminous ring outline indicator
+- Dark mode background: `#0D0D0D`
+- Removed dot indicators beneath tabs
+
+**Delivery Row (`src/components/DeliveryRow.tsx`):**
+- Removed type badge column entirely (visible in detail panel instead)
+- Customer names in NDot47 font
+
+**Actions Tab (`app/(tabs)/actions.tsx`):**
+- Segmented control: flat underline-style tabs replacing pill buttons
+- Today (emails): mono font, swipe-left to dismiss (PanResponder), 4-line body truncation, focused inbox only
+- Tasks: flat borderless rows with round circle checkboxes (18px), mono font
+- Completed tasks: low opacity, filled checkmarks, strikethrough
+- All content font sizes bumped +1 point
+- Buttons: pill-shaped, black fill REPLY/DONE, ghost border DELETE
+
+**Accounts Tab (`app/(tabs)/accounts.tsx`):**
+- Customer names in NDot47 font
+- Expanded cards: white bg with 2px black border
+- Address shown at top of expanded card
+- CONTACTS/PRODUCTS toggle buttons: black fill when selected
+
+**DatePicker (`src/components/DatePicker.tsx`):** NEW
+- Three scroll wheels: Month (full names), Day (1-31), Year (2025-2029)
+- Same WheelColumn pattern as TimePicker
+- Used for schedule event dates instead of manual text input
+
+### Server Changes Deployed to Railway
+- Timezone fix for deliveries
+- Email endpoint: focused inbox filter, HTML-to-text conversion, signature stripping
+- All deployed via `railway up`

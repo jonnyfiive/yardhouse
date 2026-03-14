@@ -13,6 +13,7 @@ import time
 import requests
 from pathlib import Path
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from flask import Flask, jsonify, request, send_file, send_from_directory, redirect
 from flask_cors import CORS
 
@@ -50,6 +51,27 @@ try:
     import qbo_integration as qbo
 except ImportError:
     qbo = None
+
+# ── Railway QBO Proxy (for coworkers without local QBO tokens) ────────
+RAILWAY_URL = os.environ.get("RAILWAY_URL", "https://unique-patience-production-3270.up.railway.app")
+RAILWAY_API_KEY = os.environ.get("RAILWAY_API_KEY", "")
+
+def _qbo_available_locally():
+    """Check if QBO is usable on this machine."""
+    return qbo and qbo.is_connected()
+
+def _proxy_qbo_from_railway(path):
+    """Fetch QBO data from Railway when local QBO isn't connected."""
+    if not RAILWAY_API_KEY:
+        return None
+    try:
+        url = f"{RAILWAY_URL}{path}"
+        resp = requests.get(url, headers={"X-API-Key": RAILWAY_API_KEY}, timeout=10)
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception as e:
+        print(f"   Railway QBO proxy error: {e}", flush=True)
+    return None
 
 # Anthropic AI Chat
 try:
@@ -342,10 +364,15 @@ def normalize_id(uid):
     return (uid or "").replace("-", "").lower()
 
 
+def _now_eastern():
+    """Return current datetime in US/Eastern timezone."""
+    return datetime.now(ZoneInfo("America/New_York"))
+
 def fetch_deliveries(days_ahead=0):
     """Fetch deliveries. days_ahead=0 means today only."""
-    today = datetime.now().strftime("%Y-%m-%d")
-    end_date = (datetime.now() + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
+    now_et = _now_eastern()
+    today = now_et.strftime("%Y-%m-%d")
+    end_date = (now_et + timedelta(days=days_ahead)).strftime("%Y-%m-%d")
 
     filter_obj = {
         "and": [
@@ -828,10 +855,15 @@ def serve_logo(filename):
 
 @app.route("/qbo/status", methods=["GET"])
 def qbo_status():
-    """Check if QuickBooks is connected."""
+    """Check if QuickBooks is connected (locally or via Railway proxy)."""
+    if _qbo_available_locally():
+        return jsonify({"connected": True, "available": True})
+    # Check if Railway proxy is available as fallback
+    if RAILWAY_API_KEY:
+        return jsonify({"connected": True, "available": True, "source": "railway"})
     if not qbo:
         return jsonify({"connected": False, "available": False, "error": "QBO module not loaded"})
-    return jsonify({"connected": qbo.is_connected(), "available": True})
+    return jsonify({"connected": False, "available": True})
 
 
 @app.route("/qbo/connect", methods=["GET"])
@@ -915,12 +947,14 @@ def qbo_disconnect():
 @app.route("/api/ar-summary", methods=["GET"])
 def ar_summary():
     """Get accounts receivable summary from QuickBooks."""
-    if not qbo:
-        return jsonify({"error": "not_available", "message": "QBO module not loaded"})
-    if not qbo.is_connected():
-        return jsonify({"error": "not_connected", "message": "QuickBooks not connected"})
-    result = qbo.get_ar_summary()
-    return jsonify(result)
+    if _qbo_available_locally():
+        result = qbo.get_ar_summary()
+        return jsonify(result)
+    # Fallback: proxy from Railway
+    proxy = _proxy_qbo_from_railway("/api/ar-summary")
+    if proxy:
+        return jsonify(proxy)
+    return jsonify({"error": "not_connected", "message": "QuickBooks not connected"})
 
 
 @app.route("/api/ar-debug", methods=["GET"])
@@ -937,32 +971,35 @@ def ar_debug():
 @app.route("/api/ar-top-overdue", methods=["GET"])
 def ar_top_overdue():
     """Top N customers by overdue balance."""
-    if not qbo:
-        return jsonify({"error": "not_available"})
-    if not qbo.is_connected():
-        return jsonify({"error": "not_connected"})
     limit = request.args.get("limit", 3, type=int)
-    result = qbo.get_top_overdue_customers(limit=limit)
-    return jsonify(result)
+    if _qbo_available_locally():
+        result = qbo.get_top_overdue_customers(limit=limit)
+        return jsonify(result)
+    proxy = _proxy_qbo_from_railway(f"/api/ar-top-overdue?limit={limit}")
+    if proxy:
+        return jsonify(proxy)
+    return jsonify({"error": "not_connected"})
 
 
 @app.route("/api/ar-report", methods=["GET"])
 def ar_report():
     """Pull A/R directly from QBO's AgedReceivables report (matches QBO UI)."""
-    if not qbo:
-        return jsonify({"error": "not_available"})
-    if not qbo.is_connected():
-        return jsonify({"error": "not_connected"})
-    result = qbo.get_ar_from_report()
-    return jsonify(result)
+    if _qbo_available_locally():
+        result = qbo.get_ar_from_report()
+        return jsonify(result)
+    proxy = _proxy_qbo_from_railway("/api/ar-report")
+    if proxy:
+        return jsonify(proxy)
+    return jsonify({"error": "not_connected"})
 
 
 @app.route("/api/ar-by-customer", methods=["GET"])
 def ar_by_customer():
     """All open invoice balances aggregated by customer name."""
-    if not qbo:
-        return jsonify({"error": "not_available"})
-    if not qbo.is_connected():
+    if not _qbo_available_locally():
+        proxy = _proxy_qbo_from_railway("/api/ar-by-customer")
+        if proxy:
+            return jsonify(proxy)
         return jsonify({"error": "not_connected"})
     try:
         client = qbo._get_qb_client()
@@ -1068,6 +1105,112 @@ def api_briefing_poll():
     except Exception as e:
         _poller_status["last_error"] = str(e)
         return jsonify({"error": str(e)}), 500
+
+
+def _strip_email_signature(text):
+    """Strip common email signatures and clean up whitespace."""
+    import re
+    if not text:
+        return ""
+    # Cut at common signature markers
+    sig_patterns = [
+        r'\r?\n--\s*\r?\n', r'\r?\nBest regards',  r'\r?\nBest,',
+        r'\r?\nKind regards', r'\r?\nRegards,', r'\r?\nThanks,?\s*\r?\n',
+        r'\r?\nThank you,?\s*\r?\n', r'\r?\nSent from my ',
+        r'\r?\nGet Outlook', r'\r?\n_{3,}', r'\r?\nCheers,',
+        r'\r?\nWarm regards', r'\r?\nSincerely,', r'\r?\nAll the best',
+        r'\r?\nV/r,', r'\r?\n\[cid:', r'\r?\nDisclaimer:',
+    ]
+    for pat in sig_patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m and m.start() > 0:
+            text = text[:m.start()].rstrip()
+            break
+    # Collapse 3+ consecutive newlines into 2
+    text = re.sub(r'(\r?\n){3,}', '\n\n', text)
+    # Strip leading/trailing whitespace per line, remove blank-only lines at start/end
+    lines = text.split('\n')
+    lines = [l.rstrip() for l in lines]
+    # Strip leading blank lines
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    # Strip trailing blank lines
+    while lines and not lines[-1].strip():
+        lines.pop()
+    return '\n'.join(lines)
+
+
+@app.route("/api/emails", methods=["GET"])
+def api_emails():
+    """Fetch today's focused inbox emails from Outlook via MS Graph.
+    Query params: days=0 (default, today only), limit=50
+    """
+    days = int(request.args.get("days", 0))
+    limit = min(int(request.args.get("limit", 50)), 100)
+
+    hdrs = ms_graph_headers()
+    if not hdrs:
+        return jsonify({"error": "MS Graph not authenticated", "emails": []}), 200
+
+    # Calculate time window (Eastern time)
+    now = _now_eastern()
+    if days == 0:
+        since = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    else:
+        since = now - timedelta(days=days)
+    since_iso = since.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    hdrs["Prefer"] = 'outlook.timezone="Eastern Standard Time"'
+
+    # Fetch from focused inbox only
+    resp = requests.get(
+        f"{MS_GRAPH_BASE}/me/messages",
+        headers=hdrs,
+        params={
+            "$filter": f"receivedDateTime ge {since_iso} and inferenceClassification eq 'focused'",
+            "$select": "id,from,subject,receivedDateTime,body,isRead,importance",
+            "$top": str(limit),
+            "$orderby": "receivedDateTime desc",
+        },
+    )
+    if resp.status_code == 401:
+        _invalidate_graph_token()
+        return jsonify({"error": "Auth expired", "emails": []}), 200
+    if resp.status_code != 200:
+        return jsonify({"error": f"Graph API {resp.status_code}", "emails": []}), 200
+
+    messages = resp.json().get("value", [])
+    emails = []
+    for msg in messages:
+        from_obj = msg.get("from", {}).get("emailAddress", {})
+        # Extract plain text from body (HTML → text)
+        body_obj = msg.get("body", {})
+        body_content = body_obj.get("content", "")
+        if body_obj.get("contentType") == "html" and body_content:
+            import re
+            # Strip HTML tags to get plain text
+            text = re.sub(r'<style[^>]*>.*?</style>', '', body_content, flags=re.DOTALL | re.IGNORECASE)
+            text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+            text = re.sub(r'</p>', '\n', text, flags=re.IGNORECASE)
+            text = re.sub(r'</div>', '\n', text, flags=re.IGNORECASE)
+            text = re.sub(r'<[^>]+>', '', text)
+            # Decode HTML entities
+            import html as html_mod
+            text = html_mod.unescape(text)
+            body_content = text
+        body_clean = _strip_email_signature(body_content)
+        emails.append({
+            "id": msg.get("id", ""),
+            "from": from_obj.get("name", from_obj.get("address", "")),
+            "fromEmail": from_obj.get("address", ""),
+            "subject": msg.get("subject", ""),
+            "body": body_clean,
+            "date": msg.get("receivedDateTime", ""),
+            "isRead": msg.get("isRead", True),
+            "importance": msg.get("importance", "normal"),
+        })
+
+    return jsonify({"emails": emails, "count": len(emails)})
 
 
 # ============================================================================
@@ -1240,7 +1383,8 @@ def _get_briefing_context():
             if actions:
                 parts.append("### Today's Actions")
                 for a in actions:
-                    parts.append(f"- {a}")
+                    text = a.get("text", a) if isinstance(a, dict) else a
+                    parts.append(f"- {text}")
 
             return "\n".join(parts) if parts else "No briefing data available."
         return "No briefing file found."
@@ -1297,7 +1441,7 @@ def api_chat():
     messages = data["messages"]
 
     # Build system prompt with full live context
-    now = datetime.now()
+    now = _now_eastern()
     time_ctx = now.strftime("Today is %A, %B %d, %Y. Current time: %I:%M %p ET.")
 
     customer_ctx = _get_customer_context()
@@ -1573,14 +1717,11 @@ def get_production():
             emp_id = get_property_value(page, "Employee")
             if emp_id:
                 entry = _notion_row_to_entry(page)
-                # Normalize None day values based on employee type
+                # Normalize None day values for piece workers only (need empty arrays)
                 etype = emp_types.get(emp_id, "piece")
                 for dk in DAY_KEYS:
-                    if entry["days"].get(dk) is None:
-                        if etype == "salaried":
-                            entry["days"][dk] = False
-                        elif etype == "piece":
-                            entry["days"][dk] = []
+                    if entry["days"].get(dk) is None and etype == "piece":
+                        entry["days"][dk] = []
                 entries[emp_id] = entry
         weeks[wk] = {
             "entries": entries,
@@ -2355,7 +2496,10 @@ if __name__ == "__main__":
     print(f"\n🚀 JUST NATION Dashboard Server starting on http://localhost:5050")
     print(f"   Notion token: {'configured' if NOTION_TOKEN else 'NOT SET'}")
     _init_msal()
-    _graph_ok = _get_graph_token(allow_device_flow=True) is not None
+    # Only block for device code flow if running interactively in a terminal
+    # (not when spawned by Electron, which has no stdin/terminal)
+    _interactive = os.isatty(0)  # stdin is a TTY = running in Terminal
+    _graph_ok = _get_graph_token(allow_device_flow=_interactive) is not None
     print(f"   MS Graph:     {'connected (MSAL)' if _graph_ok else 'NOT AUTHENTICATED (run pallet-sales MCP first)'}")
     print(f"   Companies DB: {COMPANIES_DB}")
     print(f"   Products DB:  {PRODUCTS_DB}")
