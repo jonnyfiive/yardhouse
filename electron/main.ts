@@ -273,11 +273,24 @@ function ensurePythonDeps(pythonPath: string): boolean {
 // Start the Flask server
 // ---------------------------------------------------------------------------
 async function startFlask(): Promise<boolean> {
-  // Check if Flask is already running (e.g., dev mode with manual server)
+  // Kill any stale Flask process left over from a previous crash
   const alreadyRunning = await isPortInUse(FLASK_PORT)
   if (alreadyRunning) {
-    console.log(`[Yardhouse] Flask already running on port ${FLASK_PORT}`)
-    return true
+    console.log(`[Yardhouse] Port ${FLASK_PORT} in use — killing stale process...`)
+    try {
+      execSync(`lsof -ti:${FLASK_PORT} | xargs kill -9`, { stdio: 'ignore', timeout: 5000 })
+      // Wait a moment for the port to be released
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      console.log(`[Yardhouse] Stale process killed`)
+    } catch {
+      console.log(`[Yardhouse] Could not kill process on port ${FLASK_PORT}`)
+    }
+    // If port is STILL in use (e.g., dev mode manual server), use it as-is
+    const stillInUse = await isPortInUse(FLASK_PORT)
+    if (stillInUse) {
+      console.log(`[Yardhouse] Port ${FLASK_PORT} still in use — assuming dev server`)
+      return true
+    }
   }
 
   const pythonPath = findPython()
@@ -556,7 +569,21 @@ function setupAutoUpdater(): void {
       defaultId: 0,
     }).then((result) => {
       if (result.response === 0) {
-        autoUpdater.quitAndInstall(false, true)
+        console.log('[Yardhouse] User clicked Restart Now — installing update...')
+        // Stop Flask first so the port is freed for the new version
+        stopFlask()
+        // On macOS unsigned apps, quitAndInstall can fail silently.
+        // Use autoInstallOnAppQuit + manual relaunch as fallback.
+        setTimeout(() => {
+          try {
+            autoUpdater.quitAndInstall(false, true)
+          } catch (err) {
+            console.error('[Yardhouse] quitAndInstall failed:', err)
+            // Fallback: quit and relaunch manually
+            app.relaunch()
+            app.exit(0)
+          }
+        }, 500)
       }
     })
   })

@@ -1162,22 +1162,19 @@ def api_emails():
 
     hdrs["Prefer"] = 'outlook.timezone="Eastern Standard Time"'
 
-    # Fetch from focused inbox only
-    resp = requests.get(
-        f"{MS_GRAPH_BASE}/me/messages",
-        headers=hdrs,
+    # Fetch from focused inbox only — use mailFolder filter for reliable focused-only results
+    resp = _graph_request("GET",
+        f"{MS_GRAPH_BASE}/me/mailFolders/inbox/messages",
         params={
             "$filter": f"receivedDateTime ge {since_iso} and inferenceClassification eq 'focused'",
-            "$select": "id,from,subject,receivedDateTime,body,isRead,importance",
+            "$select": "id,from,subject,receivedDateTime,body,isRead,importance,inferenceClassification",
             "$top": str(limit),
             "$orderby": "receivedDateTime desc",
         },
     )
-    if resp.status_code == 401:
-        _invalidate_graph_token()
-        return jsonify({"error": "Auth expired", "emails": []}), 200
-    if resp.status_code != 200:
-        return jsonify({"error": f"Graph API {resp.status_code}", "emails": []}), 200
+    if not resp or resp.status_code != 200:
+        status = resp.status_code if resp else 0
+        return jsonify({"error": f"Graph API {status}", "emails": []}), 200
 
     messages = resp.json().get("value", [])
     emails = []
@@ -2281,11 +2278,14 @@ def create_calendar_event():
         return jsonify({"error": "startDate required"}), 400
 
     if is_all_day:
+        # Graph API requires end date to be the next day for all-day events
+        from datetime import date as date_type
+        end_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date() + timedelta(days=1)
         event_body = {
             "subject": subject,
             "isAllDay": True,
             "start": {"dateTime": f"{start_date}T00:00:00", "timeZone": "Eastern Standard Time"},
-            "end": {"dateTime": f"{start_date}T00:00:00", "timeZone": "Eastern Standard Time"},
+            "end": {"dateTime": f"{end_date_obj.isoformat()}T00:00:00", "timeZone": "Eastern Standard Time"},
         }
     else:
         event_body = {
@@ -2299,14 +2299,14 @@ def create_calendar_event():
     if body:
         event_body["body"] = {"contentType": "text", "content": body}
 
-    resp = requests.post(
-        f"{MS_GRAPH_BASE}/me/events",
-        headers=ms_graph_headers(),
-        json=event_body,
-    )
+    try:
+        resp = _graph_request("POST", f"{MS_GRAPH_BASE}/me/events", json=event_body)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     if resp.status_code in (200, 201):
         ev = resp.json()
         return jsonify({"id": ev.get("id"), "subject": ev.get("subject"), "ok": True})
+    print(f"[Calendar] Create event failed: {resp.status_code} {resp.text}")
     return jsonify({"error": f"Graph API error {resp.status_code}", "detail": resp.text}), resp.status_code
 
 
@@ -2317,6 +2317,7 @@ def update_calendar_event(event_id):
         return jsonify({"error": "MS Graph not authenticated"}), 400
 
     data = request.json or {}
+    print(f"[Calendar PATCH] event_id={event_id}, data={data}", flush=True)
     update = {}
 
     if "subject" in data:
@@ -2326,39 +2327,60 @@ def update_calendar_event(event_id):
     if "isAllDay" in data:
         update["isAllDay"] = data["isAllDay"]
 
-    # Build start/end — need the date anchor to form the datetime string.
-    # If startDate wasn't sent, fetch the existing event to get the current date.
-    date_anchor = data.get("startDate")
+    # Build start/end — always fetch existing event so we have full context
     needs_time_update = "startTime" in data or "endTime" in data or "startDate" in data
-    if needs_time_update and not date_anchor:
-        # Fetch existing event to get current start date
-        existing = requests.get(
-            f"{MS_GRAPH_BASE}/me/events/{event_id}",
-            headers=ms_graph_headers(),
-            params={"$select": "start,end"},
-        )
-        if existing.status_code == 200:
-            ex = existing.json()
-            date_anchor = ex.get("start", {}).get("dateTime", "")[:10]
+    existing_start = None
+    existing_end = None
 
-    if needs_time_update and date_anchor:
-        if "startTime" in data or "startDate" in data:
-            start_time = data.get("startTime", "09:00")
+    if needs_time_update:
+        existing = _graph_request("GET",
+            f"{MS_GRAPH_BASE}/me/events/{event_id}",
+            params={"$select": "start,end,isAllDay"},
+        )
+        if existing and existing.status_code == 200:
+            ex = existing.json()
+            existing_start = ex.get("start", {}).get("dateTime", "")
+            existing_end = ex.get("end", {}).get("dateTime", "")
+            print(f"[Calendar PATCH] Existing: start={existing_start}, end={existing_end}", flush=True)
+
+        date_anchor = data.get("startDate") or (existing_start[:10] if existing_start else None)
+        if date_anchor:
+            # Determine start time: use provided, or extract from existing
+            start_time = data.get("startTime")
+            if not start_time and existing_start and "T" in existing_start:
+                start_time = existing_start.split("T")[1][:5]  # HH:MM from existing
+            if not start_time:
+                start_time = "09:00"
+
+            # Determine end time: use provided, or extract from existing
+            end_time = data.get("endTime")
+            if not end_time and existing_end and "T" in existing_end:
+                end_time = existing_end.split("T")[1][:5]
+            if not end_time:
+                # Default: 1 hour after start
+                sh, sm = map(int, start_time.split(":"))
+                eh = sh + 1
+                end_time = f"{eh:02d}:{sm:02d}"
+
+            # Always send both start and end together
             update["start"] = {"dateTime": f"{date_anchor}T{start_time}:00", "timeZone": "Eastern Standard Time"}
-        if "endTime" in data:
-            update["end"] = {"dateTime": f"{date_anchor}T{data['endTime']}:00", "timeZone": "Eastern Standard Time"}
+            update["end"] = {"dateTime": f"{date_anchor}T{end_time}:00", "timeZone": "Eastern Standard Time"}
+            print(f"[Calendar PATCH] Sending: start={update['start']}, end={update['end']}", flush=True)
 
     if not update:
         return jsonify({"ok": True, "noop": True})
 
-    resp = requests.patch(
+    resp = _graph_request("PATCH",
         f"{MS_GRAPH_BASE}/me/events/{event_id}",
-        headers=ms_graph_headers(),
         json=update,
     )
-    if resp.status_code == 200:
+    if resp and resp.status_code == 200:
+        print(f"[Calendar PATCH] Success", flush=True)
         return jsonify({"ok": True})
-    return jsonify({"error": f"Graph API error {resp.status_code}", "detail": resp.text}), resp.status_code
+    status = resp.status_code if resp else 500
+    detail = resp.text if resp else "No response"
+    print(f"[Calendar PATCH] Failed: {status} {detail}", flush=True)
+    return jsonify({"error": f"Graph API error {status}", "detail": detail}), status
 
 
 @app.route("/api/calendar/<path:event_id>", methods=["DELETE"])
@@ -2367,13 +2389,11 @@ def delete_calendar_event(event_id):
     if not ms_graph_headers():
         return jsonify({"error": "MS Graph not authenticated"}), 400
 
-    resp = requests.delete(
-        f"{MS_GRAPH_BASE}/me/events/{event_id}",
-        headers=ms_graph_headers(),
-    )
-    if resp.status_code == 204:
+    resp = _graph_request("DELETE", f"{MS_GRAPH_BASE}/me/events/{event_id}")
+    if resp and resp.status_code == 204:
         return jsonify({"ok": True})
-    return jsonify({"error": f"Graph API error {resp.status_code}"}), resp.status_code
+    status = resp.status_code if resp else 500
+    return jsonify({"error": f"Graph API error {status}"}), status
 
 
 # ============================================================================

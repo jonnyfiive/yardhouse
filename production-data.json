@@ -189,14 +189,16 @@
       "name": "TITO",
       "payInfo": "Hourly - $28",
       "type": "driver",
-      "weeklyRate": 1120
+      "weeklyRate": 1120,
+      "hourlyRate": 28
     },
     {
       "id": "nick",
       "name": "NICK",
       "payInfo": "Hourly - $28",
       "type": "driver",
-      "weeklyRate": 1120
+      "weeklyRate": 1120,
+      "hourlyRate": 28
     }
   ],
   "pieceRates": {
@@ -769,7 +771,7 @@
             "fri": false,
             "mon": false,
             "sat": false,
-            "thu": false,
+            "thu": true,
             "tue": false,
             "wed": false
           },
@@ -778,7 +780,7 @@
           "hrsPayroll": 40,
           "hrsWorked": null,
           "notes": "",
-          "total": 0,
+          "total": 160,
           "totalOverride": null
         },
         "fidel": {
@@ -803,7 +805,7 @@
             "fri": false,
             "mon": false,
             "sat": false,
-            "thu": false,
+            "thu": true,
             "tue": false,
             "wed": false
           },
@@ -812,7 +814,7 @@
           "hrsPayroll": 30,
           "hrsWorked": null,
           "notes": "",
-          "total": 0,
+          "total": 170,
           "totalOverride": null
         },
         "henry-sanchez": {
@@ -871,7 +873,7 @@
             "fri": false,
             "mon": false,
             "sat": false,
-            "thu": false,
+            "thu": true,
             "tue": false,
             "wed": false
           },
@@ -880,7 +882,7 @@
           "hrsPayroll": null,
           "hrsWorked": null,
           "notes": "",
-          "total": 0,
+          "total": 200,
           "totalOverride": null
         },
         "kilmer": {
@@ -990,7 +992,7 @@
             "fri": false,
             "mon": false,
             "sat": false,
-            "thu": false,
+            "thu": true,
             "tue": false,
             "wed": false
           },
@@ -999,7 +1001,7 @@
           "hrsPayroll": 40,
           "hrsWorked": null,
           "notes": "",
-          "total": 0,
+          "total": 180,
           "totalOverride": null
         },
         "tingo": {

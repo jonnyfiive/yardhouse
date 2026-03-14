@@ -52,10 +52,39 @@ def _load_tokens():
     return {}
 
 
+def _sync_tokens_to_railway(tokens):
+    """Push QBO tokens to Railway so the mobile app stays in sync.
+    Runs in a background thread to avoid blocking the request."""
+    import threading
+
+    def _push():
+        try:
+            import subprocess
+            token_json = json.dumps(tokens)
+            # Use Railway CLI to set the env var
+            result = subprocess.run(
+                ["railway", "variables", "set", f"QBO_TOKENS_JSON={token_json}"],
+                capture_output=True, text=True, timeout=30,
+                cwd=os.path.dirname(os.path.abspath(__file__)),
+            )
+            if result.returncode == 0:
+                print("   QBO: tokens synced to Railway", flush=True)
+            else:
+                print(f"   QBO: Railway sync failed — {result.stderr[:200]}", flush=True)
+        except FileNotFoundError:
+            print("   QBO: Railway CLI not installed — skipping sync", flush=True)
+        except Exception as e:
+            print(f"   QBO: Railway sync error — {e}", flush=True)
+
+    threading.Thread(target=_push, daemon=True).start()
+
+
 def _save_tokens(tokens):
-    """Persist tokens to disk."""
+    """Persist tokens to disk and sync to Railway."""
     with open(TOKEN_FILE, "w") as f:
         json.dump(tokens, f)
+    # Push to Railway in background so mobile app always has fresh tokens
+    _sync_tokens_to_railway(tokens)
 
 
 def get_auth_client():

@@ -8,7 +8,6 @@ interface Props {
   onRefresh: () => void
   onCreate: (payload: any) => Promise<any>
   onCustomerClick: (name: string) => void
-  lastSync: string
   customers: Customer[]
 }
 
@@ -16,7 +15,7 @@ interface EditModalState {
   delivery: Delivery
 }
 
-export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCreate, onCustomerClick, lastSync, customers }: Props) {
+export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCreate, onCustomerClick, customers }: Props) {
   const [editModal, setEditModal] = useState<EditModalState | null>(null)
   const [modalValues, setModalValues] = useState<Record<string, any>>({})
   const [refreshing, setRefreshing] = useState(false)
@@ -280,14 +279,6 @@ export default function DeliveriesTable({ deliveries, onUpdate, onRefresh, onCre
           {addButton}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span className="sync-label">{lastSync}</span>
-          <button
-            className="sync-btn"
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            {refreshing ? '...' : 'SYNC'}
-          </button>
         </span>
       </div>
       <table className="deliveries-table">

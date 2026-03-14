@@ -34,7 +34,6 @@ export default function App() {
   const [activePanel, setActivePanel] = useState<string | null>(null)
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null)
   const [topicOpen, setTopicOpen] = useState(false)
-  const [lastSync, setLastSync] = useState('')
   const [focusCustomerName, setFocusCustomerName] = useState<string | null>(null)
   const [customers, setCustomers] = useState<Customer[]>(() => {
     try {
@@ -142,11 +141,6 @@ export default function App() {
       if (result.deliveries) {
         setData(prev => ({ ...prev, deliveries: result.deliveries }))
         try { localStorage.setItem('jn-deliveries-cache', JSON.stringify({ date: getDeliveryDate().date, deliveries: result.deliveries })) } catch {}
-        const now = new Date()
-        const h = now.getHours() % 12 || 12
-        const m = String(now.getMinutes()).padStart(2, '0')
-        const ampm = now.getHours() >= 12 ? 'pm' : 'am'
-        setLastSync(`synced ${h}:${m}${ampm}`)
       }
     } catch {
       // Server not running, use static data
@@ -218,7 +212,6 @@ export default function App() {
                 onCreate={createDelivery}
                 onRefresh={refreshDeliveries}
                 onCustomerClick={handleCustomerClick}
-                lastSync={lastSync}
                 customers={customers}
               />
             </div>

@@ -53,7 +53,7 @@ export function calculateTotal(
   employee: Employee,
   entry: WeekEntry,
   pieceRates: Record<string, number>,
-  bonusRates?: { bundle: number; bundleSat: number },
+  bonusRates?: { bundle: number; bundleSat: number; driverHourly?: number },
 ): number {
   if (entry.totalOverride !== null) return entry.totalOverride
 
@@ -83,8 +83,9 @@ export function calculateTotal(
       }
     }
   } else if (employee.type === 'driver') {
-    if (entry.hrsWorked != null && employee.hourlyRate) {
-      total = (entry.hrsWorked || 0) * employee.hourlyRate
+    const rate = employee.hourlyRate || bonusRates?.driverHourly || 0
+    if (entry.hrsWorked != null && rate) {
+      total = (entry.hrsWorked || 0) * rate
     }
   }
 
@@ -114,7 +115,7 @@ const DEFAULT_FIELDS: (keyof EmployeeDefaults)[] = ['hrsPayroll']
 function createEmptyEntry(employee: Employee, defaults?: EmployeeDefaults): WeekEntry {
   const days: Record<string, any> = {}
   for (const k of DAY_KEYS) {
-    if (employee.type === 'salaried') days[k] = false
+    if (employee.type === 'salaried') days[k] = null
     else if (employee.type === 'piece') days[k] = []
     else days[k] = null
   }
@@ -177,28 +178,43 @@ export function useProduction() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  const debouncedSave = useCallback((newData: ProductionData, weekKey?: string) => {
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => {
-      const payload: any = { ...newData }
-      // Tell the server which week changed so it only syncs that one to Notion
-      if (weekKey) payload.changedWeek = weekKey
-      fetch(`${API_BASE}/api/production`, {
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+
+  const doSave = useCallback(async (newData: ProductionData, weekKey?: string) => {
+    const payload: any = { ...newData }
+    if (weekKey) payload.changedWeek = weekKey
+    setSaveStatus('saving')
+    try {
+      await fetch(`${API_BASE}/api/production`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      }).catch(console.error)
-    }, 500)
+      })
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus(s => s === 'saved' ? 'idle' : s), 2000)
+    } catch {
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus(s => s === 'error' ? 'idle' : s), 3000)
+    }
   }, [])
 
-  const updateData = useCallback((updater: (prev: ProductionData) => ProductionData, weekKey?: string) => {
+  const debouncedSave = useCallback((newData: ProductionData, weekKey?: string) => {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => doSave(newData, weekKey), 500)
+  }, [doSave])
+
+  const forceSave = useCallback(() => {
+    if (!data) return
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    doSave(data, currentWeekKey)
+  }, [data, currentWeekKey, doSave])
+
+  const updateData = useCallback((updater: (prev: ProductionData) => ProductionData, _weekKey?: string) => {
     setData(prev => {
       if (!prev) return prev
-      const next = updater(prev)
-      debouncedSave(next, weekKey)
-      return next
+      return updater(prev)
     })
-  }, [debouncedSave])
+  }, [])
 
   const ensureWeek = useCallback((weekKey: string, prodData: ProductionData): ProductionData => {
     const existingWeek = prodData.weeks[weekKey]
@@ -248,12 +264,11 @@ export function useProduction() {
         const withWeek = ensureWeek(newKey, data)
         if (withWeek !== data) {
           setData(withWeek)
-          debouncedSave(withWeek, newKey)
         }
       }
       return newKey
     })
-  }, [data, ensureWeek, debouncedSave])
+  }, [data, ensureWeek])
 
   const updateCell = useCallback((
     employeeId: string, day: DayKey, value: boolean | PieceEntry[] | TimeEntry | CustomEntry | null
@@ -263,8 +278,22 @@ export function useProduction() {
       const week = { ...withWeek.weeks[currentWeekKey] }
       const entry = { ...week.entries[employeeId] }
       entry.days = { ...entry.days, [day]: value }
-      // Recalculate total
       const emp = prev.employees.find(e => e.id === employeeId)
+      // Auto-sum driver hours from daily time entries
+      if (emp?.type === 'driver') {
+        let totalHrs = 0
+        for (const k of DAY_KEYS) {
+          const dv = entry.days[k]
+          if (dv && typeof dv === 'object' && !Array.isArray(dv) && 'in' in dv && 'out' in dv) {
+            const te = dv as TimeEntry
+            if (te.in && te.out) {
+              totalHrs += parseTime(te.out) - parseTime(te.in)
+            }
+          }
+        }
+        entry.hrsWorked = totalHrs > 0 ? Math.round(totalHrs * 100) / 100 : null
+      }
+      // Recalculate total
       if (emp) entry.total = calculateTotal(emp, entry, prev.pieceRates, prev.bonusRates)
       week.entries = { ...week.entries, [employeeId]: entry }
       return { ...withWeek, weeks: { ...withWeek.weeks, [currentWeekKey]: week } }
@@ -343,10 +372,9 @@ export function useProduction() {
     const withWeek = ensureWeek(currentWeekKey, data)
     if (withWeek !== data) {
       setData(withWeek)
-      debouncedSave(withWeek, currentWeekKey)
     }
     return withWeek.weeks[currentWeekKey] || null
-  }, [data, currentWeekKey, ensureWeek, debouncedSave])
+  }, [data, currentWeekKey, ensureWeek])
 
   // Compute whether forward navigation is allowed
   const canNavigateForward = (() => {
@@ -374,6 +402,8 @@ export function useProduction() {
     updateEmployee,
     reorderEmployees,
     updateData,
+    forceSave,
+    saveStatus,
     getWeekLabel: () => data?.weeks[currentWeekKey]?.label || getWeekLabel(currentWeekKey),
   }
 }

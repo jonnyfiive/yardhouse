@@ -5,6 +5,13 @@
   "title": "Daily Briefing",
   "priority": "",
   "todaysActions": [
+    "[NEW EMAIL] Angie Martinez (JUST NATION) \u2014 Re: Load of B Grade-Reebok",
+    "[NEW EMAIL] Kim Steinbach (PDR) \u2014 Automatic reply: check",
+    "[NEW EMAIL] Angie Martinez (JUST NATION) \u2014 Re: Supply Order - GRADE A Pallets 03.12.26",
+    "[NEW EMAIL] Angie Martinez (JUST NATION) \u2014 Re: GPR Generator: JUST Nation-Edison, EDISON, PO 100412, LDPE B, 1 Load",
+    "[NEW EMAIL] Patrick Derby (BETTAWAY (US Beverage)) \u2014 Pallet Load Tender Notification - Load #53790",
+    "[NEW EMAIL] Patrick Derby (BETTAWAY (US Beverage)) \u2014 Pallet Load Tender Notification - Load #53797",
+    "[NEW EMAIL] Warren Parke (PARK PALLETS SUPPLY) \u2014 Re: Euro Pallets Needed",
     "[NEW EMAIL] Patrick Derby (BETTAWAY (US Beverage)) \u2014 RE: Rel #126367",
     "[NEW EMAIL] Jenny Chen (DEFTFULFILLMENT) \u2014 Re: Pallets",
     "[NEW LEAD] Paradigm Pallet (Kyle McMinn) \u2014 Requesting quote: 48x40 A grade HT + New 48x48 HT near Downingtown, PA",
@@ -172,43 +179,43 @@
   "waitingOn": [
     {
       "contact": "Jazlyn Coyle",
-      "days": 0,
+      "days": 2,
       "subject": "Dayton RFQ \u2014 two vendors at $4, asking us to go lower",
       "topicId": "ongweoweh-dayton"
     },
     {
       "contact": "Steven Yu",
-      "days": 0,
+      "days": 2,
       "subject": "Checking if another broken pallet load ready today",
       "topicId": "sayweee"
     },
     {
       "contact": "Kyle McMinn",
-      "days": 0,
+      "days": 2,
       "subject": "Paradigm Pallet \u2014 new quote request, needs response",
       "topicId": "paradigm-pallet"
     },
     {
       "contact": "Wendy Romm",
-      "days": 9,
+      "days": 12,
       "subject": "200K-300K/yr pallet supply at Piscataway",
       "topicId": "ferraro-foods"
     },
     {
       "contact": "Richard Pearsall",
-      "days": 10,
+      "days": 13,
       "subject": "HT pallets + Euro offer. Sent 2/26 \u2014 needs escalation",
       "topicId": "rising-pharma"
     },
     {
       "contact": "Thomas Winch",
-      "days": 11,
+      "days": 14,
       "subject": "HT B's Port Reading NJ \u2014 $6.50 quote",
       "topicId": "ppoic"
     },
     {
       "contact": "Ana Calixto",
-      "days": 11,
+      "days": 14,
       "subject": "Bethlehem PA \u2014 Grade A at $6.25",
       "topicId": "rose-pallet"
     }

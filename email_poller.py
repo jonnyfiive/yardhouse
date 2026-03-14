@@ -98,7 +98,7 @@ def fetch_recent_emails(token, since_iso):
     url = (
         f"{GRAPH_BASE}/me/messages"
         f"?$filter=receivedDateTime ge {since_iso}"
-        f"&$select=id,from,toRecipients,subject,receivedDateTime,isRead"
+        f"&$select=id,from,toRecipients,subject,receivedDateTime,isRead,bodyPreview"
         f"&$top=50&$orderby=receivedDateTime desc"
     )
     data = _graph_get(token, url)
@@ -279,6 +279,8 @@ def apply_updates(briefing, inbox_emails, sent_emails, contact_index, state):
         # Update last-seen timestamp
         contact_last_seen[from_addr] = received
 
+        body_preview = msg.get("bodyPreview", "")
+
         # Rule 1: WaitingOn resolution — email FROM a waiting contact
         resolved_waiting = []
         for item in waiting_on:
@@ -293,8 +295,9 @@ def apply_updates(briefing, inbox_emails, sent_emails, contact_index, state):
         for item in resolved_waiting:
             waiting_on.remove(item)
             action_text = f"[REPLY RECEIVED] {name} responded — {subject}"
-            if action_text not in actions:
-                actions.insert(0, action_text)
+            action_obj = {"text": action_text, "body": body_preview, "messageId": msg_id}
+            if not any((a.get("text") if isinstance(a, dict) else a) == action_text for a in actions):
+                actions.insert(0, action_obj)
             changed = True
 
         # Rule 4: Overdue resolution — email from overdue contact
@@ -314,8 +317,9 @@ def apply_updates(briefing, inbox_emails, sent_emails, contact_index, state):
         # Rule 5: New unread email notification
         if not is_read:
             action_text = f"[NEW EMAIL] {name} ({company}) — {subject}"
-            if action_text not in actions:
-                actions.insert(0, action_text)
+            action_obj = {"text": action_text, "body": body_preview, "messageId": msg_id}
+            if not any((a.get("text") if isinstance(a, dict) else a) == action_text for a in actions):
+                actions.insert(0, action_obj)
                 changed = True
 
     # --- Process sent emails ---

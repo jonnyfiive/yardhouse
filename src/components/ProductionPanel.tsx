@@ -115,7 +115,13 @@ export default function ProductionPanel({ onClose }: ProductionPanelProps) {
   const {
     data, loading, currentWeekKey, getCurrentWeek, navigateWeek, canNavigateForward,
     updateCell, updateEntryField, addEmployee, removeEmployee, updateEmployee, reorderEmployees, getWeekLabel,
+    forceSave, saveStatus,
   } = useProduction()
+
+  const handleClose = useCallback(() => {
+    forceSave()
+    onClose()
+  }, [forceSave, onClose])
 
   const [showAddModal, setShowAddModal] = useState(false)
   const [showRatesModal, setShowRatesModal] = useState(false)
@@ -372,19 +378,19 @@ export default function ProductionPanel({ onClose }: ProductionPanelProps) {
       if (e.key === 'Escape') {
         if (editingEmployee) setEditingEmployee(null)
         else if (showAddModal) setShowAddModal(false)
-        else onClose()
+        else handleClose()
       }
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [onClose, showAddModal, editingEmployee])
+  }, [handleClose, showAddModal, editingEmployee])
 
   const week = getCurrentWeek()
   if (loading || !data) {
     return (
       <div className="production-panel">
         <div className="production-toolbar no-print">
-          <button className="receipt-btn" onClick={onClose}>Back</button>
+          <button className="receipt-btn" onClick={handleClose}>Back</button>
         </div>
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--label-secondary)' }}>
           {loading ? 'Loading...' : 'No data available'}
@@ -414,8 +420,23 @@ export default function ProductionPanel({ onClose }: ProductionPanelProps) {
     <div className="production-panel">
       {/* Toolbar */}
       <div className="production-toolbar no-print">
-        <button className="receipt-btn" onClick={onClose}>Back</button>
+        <button className="receipt-btn" onClick={handleClose}>Back</button>
         <h2 className="production-title">Employee Production Sheet</h2>
+        <button
+          className={`prod-save-btn ${saveStatus === 'saving' ? 'saving' : saveStatus === 'saved' ? 'saved' : saveStatus === 'error' ? 'save-error' : ''}`}
+          onClick={forceSave}
+          title="Save to server"
+        >
+          {saveStatus === 'saving' ? (
+            <><svg className="save-spinner" width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="20 14" strokeLinecap="round"/></svg> Saving</>
+          ) : saveStatus === 'saved' ? (
+            <><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7l3 3 6-6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> Saved</>
+          ) : saveStatus === 'error' ? (
+            <><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5"/><path d="M7 4.5v3M7 9v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> Error</>
+          ) : (
+            <><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11.5 8.5v2a1 1 0 01-1 1h-7a1 1 0 01-1-1v-7a1 1 0 011-1h2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M5 9l1.5-1.5L10 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg> Save</>
+          )}
+        </button>
         <div className="production-nav">
           <button className="receipt-btn" onClick={() => navigateWeek(-1)} title="Previous week">&#9664;</button>
           <span className="production-week-label">{getWeekLabel()}</span>
