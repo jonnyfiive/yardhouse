@@ -585,9 +585,11 @@ def get_top_overdue_customers(limit=3):
         ]
         overdue_list.sort(key=lambda x: -x["overdue_amount"])
 
+        total_overdue_amount = sum(x["overdue_amount"] for x in overdue_list)
         return {
             "top_overdue": overdue_list[:limit],
             "total_overdue_customers": len(overdue_list),
+            "total_overdue_amount": round(total_overdue_amount, 2),
         }
 
     except Exception as e:
